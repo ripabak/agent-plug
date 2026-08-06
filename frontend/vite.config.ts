@@ -15,4 +15,15 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  // Allow access via tunnel / custom domain (e.g. agent-plug.fire.my.id).
+  // Vite blocks unknown Host headers by default (DNS-rebinding protection);
+  // `true` disables that check for both dev and preview. For a stricter
+  // setup, list explicit hosts instead:
+  //   allowedHosts: ['agent-plug.fire.my.id']
+  server: {
+    allowedHosts: true,
+  },
+  preview: {
+    allowedHosts: true,
+  },
 })
