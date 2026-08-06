@@ -1,0 +1,54 @@
+# --- OS / editor ---
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.tsbuildinfo
+
+# --- Logs ---
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Python / uv (backend) ---
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv
+.pytest_cache/
+.ruff_cache
+.pyright
+temps/
+
+# --- Node / bun (frontend) ---
+node_modules
+dist-ssr
+coverage
+*.local
+.eslintcache
+*.timestamp-*-*.mjs
+
+# --- Secrets / env ---
+.env
+.env.local
+.env.*.local
+
+# --- Test artifacts ---
+__screenshots__/
+/cypress/videos/
+/cypress/screenshots/
+
+# --- Uploaded files (backend runtime) ---
+uploads/

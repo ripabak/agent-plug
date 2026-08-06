@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Agent-Plug — Widget Demo</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        margin: 0;
+        padding: 48px 24px;
+        background: #f8fafc;
+        color: #0f172a;
+        line-height: 1.6;
+      }
+      main {
+        max-width: 720px;
+        margin: 0 auto;
+      }
+      h1 {
+        font-size: 28px;
+        margin-bottom: 4px;
+      }
+      .sub {
+        color: #64748b;
+        margin-bottom: 28px;
+      }
+      .card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+      }
+      code {
+        background: #f1f5f9;
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-size: 13px;
+      }
+      /* Long single-line snippet: wrap instead of overflowing the card. */
+      code.code-block {
+        display: block;
+        background: #0f172a;
+        color: #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 13px;
+        white-space: pre-wrap;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+        overflow-x: auto;
+      }
+      .missing {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+        border-radius: 10px;
+        padding: 14px 16px;
+      }
+      /* Small screens: tighter page so nothing overflows. */
+      @media (max-width: 640px) {
+        body {
+          padding: 24px 14px;
+        }
+        h1 {
+          font-size: 22px;
+        }
+        .card {
+          padding: 16px;
+        }
+        code.code-block {
+          font-size: 12px;
+          padding: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>🧪 Agent-Plug Demo Page</h1>
+      <p class="sub">This page simulates an external website with the widget embedded.</p>
+
+      <div class="card">
+        <h3 style="margin-top: 0">How to use</h3>
+        <p>
+          Open this page with the agent id and token as query parameters — exactly like the
+          <code>data-*</code> attributes of the embed snippet:
+        </p>
+        <code class="code-block"
+          >/demo.html?agent=1&token=YOUR_PUBLIC_TOKEN&base=http://localhost:8000</code
+        >
+        <p style="margin-bottom: 0">
+          Optional theming: <code>theme</code> selects a preset
+          (<code>indigo|emerald|rose|amber|slate|ocean</code>) and any color token can be
+          overridden, e.g. <code>&headerBg=%23dc2626&btnBg=%23dc2626</code>. The
+          <strong>Embed tab</strong> in your dashboard links here automatically. Then look at
+          the <strong>bottom-right corner</strong> 👉
+        </p>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top: 0">About this agent</h3>
+        <p id="agent-info" class="sub" style="margin-bottom: 0">Loading agent…</p>
+      </div>
+
+      <div id="missing" class="missing" style="display: none">
+        Missing <code>agent</code> and/or <code>token</code> query parameters. Use the demo link
+        from the Embed tab instead.
+      </div>
+    </main>
+
+    <script>
+      // Load the widget exactly like the embed snippet would, but using query params.
+      (function () {
+        var params = new URLSearchParams(window.location.search)
+        var agent = params.get('agent')
+        var token = params.get('token')
+        var base = params.get('base') || 'http://localhost:8000'
+        if (!agent || !token) {
+          document.getElementById('missing').style.display = 'block'
+          return
+        }
+        var s = document.createElement('script')
+        s.src = base.replace(/\/+$/, '') + '/api/public/widget.js'
+        s.setAttribute('data-agent-id', agent)
+        s.setAttribute('data-token', token)
+        s.setAttribute('data-base-url', base.replace(/\/+$/, ''))
+
+        // Optional theming: ?theme=<preset> and per-token ?headerBg=.. overrides
+        // (forwarded as data-theme-name / data-chat-<token> attributes).
+        var preset = params.get('theme')
+        if (preset) s.setAttribute('data-theme-name', preset)
+        var TOKEN_KEYS = [
+          'headerBg', 'headerText', 'msgsBg', 'aiBubbleBg', 'aiBubbleText', 'aiBubbleBorder',
+          'userBubbleBg', 'userBubbleText', 'thinkingBg', 'thinkingText', 'thinkingBorder',
+          'toolsBg', 'toolsText', 'toolsBorder', 'toolBg', 'btnBg', 'btnText',
+          'inputBg', 'inputBorder', 'inputText', 'toolbarBg', 'toolbarBorder',
+          'accent', 'accentSoft', 'muted', 'link', 'codeBg', 'preBg', 'preBorder',
+          'tableBorder', 'blockquoteText', 'sourcesLabel',
+          'toolSuccessText', 'toolSuccessBg', 'toolSuccessBorder',
+          'toolErrorText', 'toolErrorBg', 'toolErrorBorder',
+          'errBg', 'errText', 'errBorder'
+        ]
+        TOKEN_KEYS.forEach(function (key) {
+          var v = params.get(key)
+          if (v) {
+            s.setAttribute(
+              'data-chat-' + key.replace(/[A-Z]/g, function (c) { return '-' + c.toLowerCase() }),
+              v,
+            )
+          }
+        })
+        document.head.appendChild(s)
+
+        // Show agent info from the public config endpoint (best-effort).
+        fetch(base.replace(/\/+$/, '') + '/api/public/agents/' + agent + '/config', {
+          headers: { 'X-Agent-Token': token },
+        })
+          .then(function (r) { return r.json() })
+          .then(function (cfg) {
+            document.getElementById('agent-info').textContent =
+              cfg.name + (cfg.description ? ' — ' + cfg.description : '')
+          })
+          .catch(function () {
+            document.getElementById('agent-info').textContent = 'Agent info unavailable.'
+          })
+      })()
+    </script>
+  </body>
+</html>

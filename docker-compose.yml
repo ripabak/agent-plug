@@ -1,0 +1,85 @@
+# Agent-Plug — simple Docker setup
+#
+#   docker compose up --build
+#
+# Services:
+#   db       PostgreSQL 17 (data persisted in the `pgdata` volume)
+#   backend  FastAPI app (uvicorn on :8000) — API + widget.js
+#   frontend the built Vue dashboard served by `vite preview` (bun) on :5173,
+#            calling the backend directly at http://localhost:8000 (CORS)
+#
+# Secrets (OPENROUTER_API_KEY, etc.) are read from backend/.env automatically
+# (copy backend/.env.example to backend/.env if it doesn't exist). Everything
+# else has sane defaults you can override in a root .env file next to this
+# compose file, e.g.:
+#
+#   POSTGRES_PASSWORD=your-password
+#   SECRET_KEY=your-long-random-secret
+#   OPENROUTER_API_KEY=sk-or-v1-...
+#
+# URLs:
+#   Dashboard : http://localhost:5173
+#   API docs  : http://localhost:8000/docs
+#   Widget    : http://localhost:8000/api/public/widget.js
+
+name: agent-plug
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: agent-plug
+    ports:
+      # Exposed on a non-default host port so it never conflicts with a local
+      # Postgres already running on 5432. Remove if you don't need host access.
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agent-plug"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      # Provides OPENROUTER_API_KEY / OPENROUTER_MODEL / etc. — copy
+      # backend/.env.example to backend/.env if it doesn't exist.
+      - path: ./backend/.env
+        required: false
+    environment:
+      # DB host is the compose service name `db`, not localhost.
+      DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/agent-plug
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      # Widget + embed snippets point at the backend directly.
+      BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:8000}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      # Uploaded PDFs persist across container restarts.
+      - uploads:/app/uploads
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Backend API base URL baked into the dashboard at build time.
+        VITE_API_BASE: ${VITE_API_BASE:-http://localhost:8000}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+
+volumes:
+  pgdata:
+  uploads:
