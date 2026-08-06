@@ -33,6 +33,11 @@ class OpenRouterEmbeddings(Embeddings):
         self.batch_size = batch_size
 
     def _headers(self) -> dict:
+        if not self.api_key:
+            raise RuntimeError(
+                "OPENROUTER_API_KEY is not set — add it to backend/.env (local dev) "
+                "or the service environment (Dokploy/deploy) before indexing knowledge."
+            )
         return {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
