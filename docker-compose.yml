@@ -8,14 +8,13 @@
 #   frontend the built Vue dashboard served by `vite preview` (bun) on :5173,
 #            calling the backend directly at http://localhost:8000 (CORS)
 #
-# Secrets (OPENROUTER_API_KEY, etc.) are read from backend/.env automatically
-# (copy backend/.env.example to backend/.env if it doesn't exist). Everything
-# else has sane defaults you can override in a root .env file next to this
-# compose file, e.g.:
+# Semua konfigurasi backend (termasuk OPENROUTER_API_KEY) didefinisikan di
+# bawah ini dan diisi lewat file `.env` di root repo (copy dari .env.example) —
+# setiap variabel punya default aman. backend/.env & frontend/.env hanya untuk
+# dev lokal (uv run / bun dev), bukan untuk Docker.
 #
-#   POSTGRES_PASSWORD=your-password
-#   SECRET_KEY=your-long-random-secret
-#   OPENROUTER_API_KEY=sk-or-v1-...
+#   cp .env.example .env      # isi OPENROUTER_API_KEY dll.
+#   docker compose up --build
 #
 # URLs:
 #   Dashboard : http://localhost:5173
@@ -50,10 +49,18 @@ services:
     environment:
       # DB host is the compose service name `db`, not localhost.
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/agent-plug
+      # JWT signing secret — set a random one in .env (e.g. `openssl rand -hex 32`).
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      # Comma-separated origins allowed by CORS (dashboard + widget test pages).
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
-      # Widget + embed snippets point at the backend directly.
+      # Public base URL used to build the embed snippet / widget script URL.
       BACKEND_PUBLIC_URL: ${BACKEND_PUBLIC_URL:-http://localhost:8000}
+      # OpenRouter (LLM + embeddings) — REQUIRED for chat & indexing.
+      # Isi di root .env: OPENROUTER_API_KEY=sk-or-v1-...
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-qwen/qwen3.7-flash}
+      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
+      OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-perplexity/pplx-embed-v1-0.6b}
     depends_on:
       db:
         condition: service_healthy

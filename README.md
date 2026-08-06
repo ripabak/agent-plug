@@ -24,9 +24,10 @@ docker compose up --build
 - API docs: http://localhost:8000/docs
 - Widget: http://localhost:8000/api/public/widget.js
 
-Secrets (`OPENROUTER_API_KEY`, …) are read from `backend/.env` — copy
-`backend/.env.example` there if it doesn't exist. Data persists in named
-volumes (`pgdata`, `uploads`).
+Semua konfigurasi (`OPENROUTER_API_KEY`, `SECRET_KEY`, …) diisi lewat file `.env`
+di root repo (copy dari `.env.example`) — docker compose meng-interpolasinya
+ke service. `backend/.env`/`frontend/.env` hanya untuk dev lokal.
+Data persists di named volumes (`pgdata`, `uploads`).
 
 ### Local dev
 
@@ -125,8 +126,9 @@ docker-compose.yml         # db + backend + frontend
 
 ## Environment variables
 
-- [`backend/.env.example`](backend/.env.example) — backend config
-  (`backend/.env`): DB URL, SECRET_KEY, OpenRouter keys, …
-- [`.env.example`](.env.example) — Docker Compose overrides (root `.env`)
-- [`frontend/.env.example`](frontend/.env.example) — frontend config
-  (`frontend/.env`): `VITE_API_BASE`
+- [`backend/.env.example`](backend/.env.example) — backend config untuk dev
+  lokal (`backend/.env`): DB URL, SECRET_KEY, OpenRouter keys, …
+- [`.env.example`](.env.example) — config Docker Compose (root `.env`): semua
+  variabel backend/db/frontend (termasuk `OPENROUTER_API_KEY`)
+- [`frontend/.env.example`](frontend/.env.example) — frontend config untuk dev
+  lokal (`frontend/.env`): `VITE_API_BASE`
