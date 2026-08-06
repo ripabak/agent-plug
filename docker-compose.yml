@@ -47,11 +47,6 @@ services:
   backend:
     build: ./backend
     restart: unless-stopped
-    env_file:
-      # Provides OPENROUTER_API_KEY / OPENROUTER_MODEL / etc. — copy
-      # backend/.env.example to backend/.env if it doesn't exist.
-      - path: ./backend/.env
-        required: false
     environment:
       # DB host is the compose service name `db`, not localhost.
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/agent-plug
