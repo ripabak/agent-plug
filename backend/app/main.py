@@ -52,8 +52,6 @@ class PublicCorsMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app.add_middleware(PublicCorsMiddleware)
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
@@ -61,6 +59,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(PublicCorsMiddleware)
 
 app.include_router(auth.router)
 app.include_router(admin.router)
