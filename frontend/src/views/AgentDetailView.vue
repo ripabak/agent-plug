@@ -7,7 +7,6 @@ import KnowledgeTab from '@/components/KnowledgeTab.vue'
 import PreviewTab from '@/components/PreviewTab.vue'
 import EmbedTab from '@/components/EmbedTab.vue'
 import UsageTab from '@/components/UsageTab.vue'
-import PlugMark from '@/components/PlugMark.vue'
 import { agentHeaderColor } from '@/utils/themes'
 
 const route = useRoute()
@@ -59,9 +58,7 @@ onMounted(async () => {
 <template>
   <div class="page">
     <div class="topbar">
-      <RouterLink to="/dashboard" class="brand"
-        ><span class="logo-mark"><PlugMark :size="17" /></span> Agent-Plug</RouterLink
-      >
+      <RouterLink to="/dashboard" class="btn btn-ghost btn-sm">← Back to all agents</RouterLink>
     </div>
 
     <div v-if="error" class="error-box">{{ error }}</div>
