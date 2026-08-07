@@ -39,6 +39,11 @@ CORS_ORIGINS = [
 # --- OpenRouter ---
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 OPENROUTER_MODEL = os.getenv("OPENROUTER_MODEL", "qwen/qwen3.7-flash")
+# Comma-separated OpenRouter model IDs tried in order when the primary model
+# fails or is rate-limited (ModelFallbackMiddleware). Empty = no fallback.
+OPENROUTER_FALLBACK_MODELS = os.getenv(
+    "OPENROUTER_FALLBACK_MODELS", "deepseek/deepseek-v4-flash-0731"
+)
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 OPENROUTER_EMBEDDING_MODEL = os.getenv(
     "OPENROUTER_EMBEDDING_MODEL", "perplexity/pplx-embed-v1-0.6b"
