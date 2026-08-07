@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
+from starlette.requests import Request
+from starlette.responses import Response
 
 from .agent.checkpointer import close_checkpointer, init_checkpointer
 from .config import CORS_ORIGINS
@@ -25,6 +28,31 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="Agent-Plug API", version="0.1.0", lifespan=lifespan)
+
+
+class PublicCorsMiddleware(BaseHTTPMiddleware):
+    """Allow any origin for /api/public/* (widget endpoints use X-Agent-Token,
+    not cookies, so wildcard CORS is safe)."""
+
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        if request.url.path.startswith("/api/public/"):
+            origin = request.headers.get("origin")
+            if request.method == "OPTIONS":
+                response = Response(status_code=200)
+            else:
+                response = await call_next(request)
+            if origin:
+                response.headers["Access-Control-Allow-Origin"] = origin
+            else:
+                response.headers["Access-Control-Allow-Origin"] = "*"
+            response.headers["Access-Control-Allow-Methods"] = "*"
+            response.headers["Access-Control-Allow-Headers"] = "*"
+            response.headers["Access-Control-Max-Age"] = "86400"
+            return response
+        return await call_next(request)
+
+
+app.add_middleware(PublicCorsMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
