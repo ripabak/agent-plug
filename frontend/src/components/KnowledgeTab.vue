@@ -15,6 +15,7 @@ const urlsText = ref('')
 const busy = ref(false)
 const error = ref('')
 const notice = ref('')
+const refreshing = ref(false)
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
 const hasRunning = computed(() =>
@@ -27,6 +28,21 @@ async function load() {
     await agentsStore.fetchSources(agentId.value)
   } catch (err) {
     error.value = err instanceof Error ? err.message : 'Failed to load sources'
+  }
+}
+
+/** Manual refresh — always clickable (unlike the old `:disabled="!hasRunning"`
+ *  gate, which froze the button once all sources were idle/ready) and shows
+ *  busy feedback on the button itself. */
+async function refresh() {
+  if (refreshing.value) return
+  refreshing.value = true
+  try {
+    await agentsStore.fetchSources(agentId.value)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to load sources'
+  } finally {
+    refreshing.value = false
   }
 }
 
@@ -289,8 +305,13 @@ async function addText() {
         "
       >
         <h3 style="margin: 0">Sources ({{ agentsStore.sources.length }})</h3>
-        <button class="btn btn-ghost btn-sm" :disabled="!hasRunning" @click="load">
-          <span v-if="hasRunning" class="spinner" style="margin-right: 4px" /> Refresh
+        <button
+          class="btn btn-ghost btn-sm"
+          :disabled="refreshing"
+          :title="refreshing ? 'Refreshing…' : 'Reload the source list'"
+          @click="refresh"
+        >
+          <span v-if="refreshing" class="spinner" style="margin-right: 4px" /> Refresh
         </button>
       </div>
 
