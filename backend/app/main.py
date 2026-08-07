@@ -10,13 +10,15 @@ from .config import CORS_ORIGINS
 from .database import init_db
 from .rag.pipeline import rebuild_all
 from .routers import agents, auth, knowledge, public, threads
+from .services.health import collect_health
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     await init_db()
     await init_checkpointer()
-    # Rebuild in-memory RAG indexes from stored sources (MVP: in-memory store).
+    # Reconcile pgvector indexes: only sources not yet indexed (or indexed
+    # before pgvector) are re-fetched/re-embedded; the rest survive restarts.
     asyncio.create_task(rebuild_all())
     yield
     await close_checkpointer()
@@ -41,4 +43,11 @@ app.include_router(public.router)
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    """Liveness + third-party dependency checks (DB, storage/S3, OpenRouter).
+
+    Overall status: `ok` (all up), `degraded` (DB up, a dependency down) or
+    `down` (database unreachable). Each check carries its own status:
+    `up` | `down` | `not_configured` (e.g. S3 when STORAGE_BACKEND=local,
+    OpenRouter when OPENROUTER_API_KEY is missing).
+    """
+    return await collect_health()

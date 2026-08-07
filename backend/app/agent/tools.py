@@ -2,7 +2,7 @@
 from typing import Callable, Optional
 
 from langchain.tools import tool
-from langchain_core.vectorstores import InMemoryVectorStore
+from langchain_core.vectorstores import VectorStore
 
 from ..config import RAG_TOP_K
 from ..rag import store_manager
@@ -42,7 +42,7 @@ def format_docs(docs) -> str:
     return "\n\n".join(lines)
 
 
-def create_rag_tool(agent_id: int, store: InMemoryVectorStore | None = None, top_k: int = RAG_TOP_K):
+def create_rag_tool(agent_id: int, store: VectorStore | None = None, top_k: int = RAG_TOP_K):
     """Build the `search_knowledge_base` tool for an agent.
 
     `store` is optional; when omitted the tool looks up the agent's store via

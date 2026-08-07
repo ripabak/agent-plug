@@ -38,7 +38,11 @@ defineProps<{ kind: string; theme: ChatTheme }>()
       <span class="cvp-chat" :style="{ background: theme.msgsBg }">
         <span
           class="cvp-bubble cvp-left"
-          :style="{ background: theme.aiBubbleBg, borderColor: theme.aiBubbleBorder, color: theme.aiBubbleText }"
+          :style="{
+            background: theme.aiBubbleBg,
+            borderColor: theme.aiBubbleBorder,
+            color: theme.aiBubbleText,
+          }"
         >
           Halo! Ada yang bisa saya bantu?
         </span>
@@ -55,7 +59,11 @@ defineProps<{ kind: string; theme: ChatTheme }>()
     <template v-else-if="kind === 'aiBubble'">
       <span
         class="cvp-bubble cvp-left"
-        :style="{ background: theme.aiBubbleBg, borderColor: theme.aiBubbleBorder, color: theme.aiBubbleText }"
+        :style="{
+          background: theme.aiBubbleBg,
+          borderColor: theme.aiBubbleBorder,
+          color: theme.aiBubbleText,
+        }"
       >
         Halo! Ada yang bisa saya bantu?
       </span>
@@ -75,7 +83,11 @@ defineProps<{ kind: string; theme: ChatTheme }>()
     <template v-else-if="kind === 'thinking'">
       <span
         class="cvp-think"
-        :style="{ background: theme.thinkingBg, borderColor: theme.thinkingBorder, color: theme.thinkingText }"
+        :style="{
+          background: theme.thinkingBg,
+          borderColor: theme.thinkingBorder,
+          color: theme.thinkingText,
+        }"
       >
         <span class="cvp-think-summary">🧠 Reasoning…</span>
         <span class="cvp-think-line" :style="{ background: theme.thinkingText }" />
@@ -87,17 +99,29 @@ defineProps<{ kind: string; theme: ChatTheme }>()
     <template v-else-if="kind === 'tools'">
       <span
         class="cvp-tools"
-        :style="{ background: theme.aiBubbleBg, borderColor: theme.aiBubbleBorder, color: theme.aiBubbleText }"
+        :style="{
+          background: theme.aiBubbleBg,
+          borderColor: theme.aiBubbleBorder,
+          color: theme.aiBubbleText,
+        }"
       >
         <span
           class="cvp-tool"
-          :style="{ borderColor: theme.toolSuccessBorder, color: theme.toolSuccessText, background: theme.toolSuccessBg }"
+          :style="{
+            borderColor: theme.toolSuccessBorder,
+            color: theme.toolSuccessText,
+            background: theme.toolSuccessBg,
+          }"
         >
           ✓ search_knowledge_base
         </span>
         <span
           class="cvp-tool"
-          :style="{ borderColor: theme.toolErrorBorder, color: theme.toolErrorText, background: theme.toolErrorBg }"
+          :style="{
+            borderColor: theme.toolErrorBorder,
+            color: theme.toolErrorText,
+            background: theme.toolErrorBg,
+          }"
         >
           ✕ fetch_page
         </span>
@@ -113,7 +137,11 @@ defineProps<{ kind: string; theme: ChatTheme }>()
     <template v-else-if="kind === 'input'">
       <span
         class="cvp-input"
-        :style="{ background: theme.inputBg, borderColor: theme.inputBorder, color: theme.inputText }"
+        :style="{
+          background: theme.inputBg,
+          borderColor: theme.inputBorder,
+          color: theme.inputText,
+        }"
       >
         Type your message…
       </span>
@@ -127,11 +155,17 @@ defineProps<{ kind: string; theme: ChatTheme }>()
       >
         <span
           class="cvp-input"
-          :style="{ background: theme.inputBg, borderColor: theme.inputBorder, color: theme.inputText }"
+          :style="{
+            background: theme.inputBg,
+            borderColor: theme.inputBorder,
+            color: theme.inputText,
+          }"
         >
           Type your message…
         </span>
-        <span class="cvp-send" :style="{ background: theme.btnBg, color: theme.btnText }">Send</span>
+        <span class="cvp-send" :style="{ background: theme.btnBg, color: theme.btnText }"
+          >Send</span
+        >
       </span>
     </template>
 

@@ -11,6 +11,17 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://postgres:postgres@localhost:5432/agent-plug",
 )
 
+# --- Vector store (pgvector via langchain-postgres) ---
+# langchain-postgres PGVector uses psycopg3 (async), so the app's asyncpg URL
+# is translated to its psycopg equivalent (same server, same credentials).
+# Set VECTOR_DB_URL explicitly to point at a different database.
+def _psycopg_url(url: str) -> str:
+    if url.startswith("postgresql+asyncpg://"):
+        return "postgresql+psycopg://" + url[len("postgresql+asyncpg://") :]
+    return url
+
+VECTOR_DB_URL = os.getenv("VECTOR_DB_URL") or _psycopg_url(DATABASE_URL)
+
 # --- Auth ---
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
@@ -46,6 +57,17 @@ _BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(_BACKEND_ROOT, os.getenv("UPLOAD_DIR", "uploads"))
 UPLOAD_MAX_FILES = int(os.getenv("UPLOAD_MAX_FILES", 5))
 UPLOAD_MAX_SIZE = int(os.getenv("UPLOAD_MAX_SIZE", 10 * 1024 * 1024))  # 10 MB per file
+
+# --- Agent avatar (photo/logo upload) ---
+# Raw upload is validated on both FE and BE; the file is then compressed to
+# WebP (max AVATAR_MAX_DIM edge, AVATAR_QUALITY) with Pillow before storage.
+AVATAR_MAX_SIZE = int(os.getenv("AVATAR_MAX_SIZE", 5 * 1024 * 1024))  # 5 MB raw
+AVATAR_MAX_DIM = int(os.getenv("AVATAR_MAX_DIM", 512))  # longest edge after resize
+AVATAR_MAX_PIXELS = int(os.getenv("AVATAR_MAX_PIXELS", 25_000_000))  # decode guard
+AVATAR_MAX_FRAMES = int(os.getenv("AVATAR_MAX_FRAMES", 200))  # animated GIF cap
+AVATAR_QUALITY = int(os.getenv("AVATAR_QUALITY", 82))  # WebP quality
+# GIF included: animated GIFs become animated WebP so the button can move.
+AVATAR_CONTENT_TYPES = ("image/gif", "image/jpeg", "image/png", "image/webp")
 
 # --- Storage (where uploaded PDFs live) ---
 # local = filesystem under UPLOAD_DIR (default); s3 = S3-compatible object

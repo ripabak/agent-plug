@@ -9,7 +9,7 @@ read the root `AGENTS.md`.
 - FastAPI + uvicorn, SQLAlchemy 2 (async) + asyncpg, PostgreSQL
 - LangChain `create_agent` (Deep Agents API) + `langchain-openrouter` (`ChatOpenRouter` — constructor kwarg is `model=`, NOT `model_name`)
 - LangGraph `AsyncPostgresSaver` (checkpointer) for conversation state
-- RAG: `InMemoryVectorStore` per agent + custom `OpenRouterEmbeddings` (httpx → OpenRouter `/embeddings`), `RecursiveCharacterTextSplitter` (1000/200), `pypdf`, BeautifulSoup
+- RAG: pgvector (PostgreSQL) via `langchain-postgres` `PGVector` — one collection `agent_{agent_id}` per agent — + custom `OpenRouterEmbeddings` (httpx → OpenRouter `/embeddings`), `RecursiveCharacterTextSplitter` (1000/200), `pypdf`, BeautifulSoup
 - Auth: bcrypt + JWT (python-jose)
 
 ## Layout
@@ -28,13 +28,15 @@ backend/
     main.py                # FastAPI app, lifespan (DB + checkpointer + RAG rebuild), routers
     routers/
       auth.py              # /api/auth (register, login, me)
-      agents.py            # /api/agents CRUD + embed + token rotation
+      agents.py            # /api/agents CRUD + embed + token rotation + avatar upload/remove
+      public.py            # + GET /api/public/agents/{id}/avatar (serve WebP, no token)
       knowledge.py         # /api/agents/{id}/sources (+ /files, /text, /reindex)
       threads.py           # /api/threads (authed SSE chat)
       public.py            # /api/public (widget config/commands/stream/history + widget.js)
     services/
       agent_session_service.py  # background runs, SSE event buffer, sources event, marker parsing
       embed.py                  # embed snippet generation
+      health.py                 # /health dependency checks (DB, storage/S3, OpenRouter)
     agent/
       agent.py             # build_agent (create_agent + middleware + RAG tool)
       tools.py             # search_knowledge_base tool + progress emitter
@@ -44,10 +46,12 @@ backend/
       fetcher.py           # URL fetch + BeautifulSoup HTML parsing (strip scripts/nav/footer)
       pdf.py               # pypdf text extraction (parse_pdf / parse_pdf_bytes)
       splitter.py          # RecursiveCharacterTextSplitter
-      store.py             # RAGStoreManager (per-agent InMemoryVectorStore + chunk bookkeeping)
+      store.py             # RAGStoreManager (per-agent PGVector collection + chunk bookkeeping)
       pipeline.py          # index_source / reindex / rebuild_all (branch by source.kind)
+    services/
+      avatar.py            # Pillow: validate + compress uploads to WebP (max 512px, q82)
     storage/
-      base.py              # Storage protocol (put/get/delete/replace/exists)
+      base.py              # Storage protocol (put/get/delete/exists)
       local.py             # LocalStorage — filesystem under UPLOAD_DIR (default)
       s3.py                # S3Storage — boto3, S3-compatible (SeaweedFS/MinIO/AWS)
       __init__.py          # `storage` singleton, dipilih dari STORAGE_BACKEND
@@ -64,7 +68,8 @@ uv run pyright main.py app/ tests/        # type-check — must be 0 errors befo
 ```
 
 ## Environment (.env)
-`DATABASE_URL`, `SECRET_KEY`, `CORS_ORIGINS`, `OPENROUTER_API_KEY`,
+`DATABASE_URL` (asyncpg; `VECTOR_DB_URL` untuk pgvector diturunkan otomatis
+ke `postgresql+psycopg://` — override via env jika perlu), `SECRET_KEY`, `CORS_ORIGINS`, `OPENROUTER_API_KEY`,
 `OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`, `OPENROUTER_EMBEDDING_MODEL`,
 `BACKEND_PUBLIC_URL`, `UPLOAD_DIR` (default `uploads/`), `UPLOAD_MAX_FILES=5`,
 `UPLOAD_MAX_SIZE=10MB`. Storage: `STORAGE_BACKEND` (`local`|`s3`),
@@ -80,9 +85,18 @@ uv run pyright main.py app/ tests/        # type-check — must be 0 errors befo
 - **DB schema changes**: MVP has no alembic — `init_db()` runs `create_all` +
   idempotent `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for new columns (see
   `database.py`). Always add the ALTER for existing dev DBs.
-- **RAG stores are in-memory**: on startup `rebuild_all()` re-indexes from the
-  `source` rows (background task in lifespan). Sources: `kind=url` (HTML
-  fetch), `kind=pdf` (file stored in the storage backend — local disk under
+- **RAG vectors live in PostgreSQL (pgvector)**: chunks are stored by
+  `langchain-postgres` `PGVector` in the `langchain_pg_collection` /
+  `langchain_pg_embedding` tables (extension `vector` di-enable di
+  `init_db()`), satu collection `agent_{agent_id}` per agent. On startup
+  `rebuild_all()` (background task in lifespan) HANYA re-index source yang
+  belum terindex di PG (`status != 'ready'` atau `chunk_ids IS NULL` —
+  termasuk source peninggalan pra-pgvector); source siap tidak di-fetch/
+  di-embed ulang karena vektornya persisten. Re-index manual
+  `POST …/sources/reindex` tetap memaksa semua. Chunk ids persisted on
+  `source.chunk_ids` (JSONB) so `DELETE …/sources/{id}` stays correct
+  across restarts. Sources: `kind=url` (HTML fetch), `kind=pdf`
+  (file stored in the storage backend — local disk under
   `uploads/{agent_id}/` atau S3/SeaweedFS — key `{agent_id}/{uuid}.pdf`,
   parsed with pypdf), `kind=text` (pasted text in `text_content` column).
   Every chunk carries `{url, title, source_id, agent_id}` metadata; `url` is
@@ -91,12 +105,28 @@ uv run pyright main.py app/ tests/        # type-check — must be 0 errors befo
 - **Storage**: SEMUA akses file lewat `app.storage.storage` (singleton,
   `STORAGE_BACKEND=local|s3`) — jangan tulis langsung ke `UPLOAD_DIR` di
   router/pipeline. Key bersifat portable antar backend. Endpoint file:
-  upload `POST .../sources/files`, replace `PUT .../sources/{id}/file`
-  (overwrite key yang sama → citation URL stabil), delete
-  `DELETE .../sources/{id}` (idempotent).
+  upload `POST .../sources/files` (PDF baru = source baru; hapus source lama
+  manual via UI), delete `DELETE .../sources/{id}` (idempotent).
+- **Agent avatar**: emoji ATAU foto (eksklusif). Upload `PUT
+  /api/agents/{id}/avatar` — validasi FE+BE (GIF/JPEG/PNG/WebP, max
+  `AVATAR_MAX_SIZE` 5MB), kompres Pillow ke WebP (`avatars/{id}.webp` di
+  storage singleton, max `AVATAR_MAX_DIM` 512px, `AVATAR_QUALITY` 82), key
+  tetap → URL stabil. **GIF animasi → WebP animasi** (cap
+  `AVATAR_MAX_FRAMES` 200); **transparansi dipertahankan** (RGBA). Hapus
+  `DELETE /api/agents/{id}/avatar` → kembali ke emoji. Serve publik tanpa
+  token via `GET /api/public/agents/{id}/avatar` (dipakai `<img>` di widget;
+  URL ada di `Agent.avatar_url`). Widget render foto dengan background
+  transparan + `contain` (floating, tanpa warna dasar). Selama foto ada, FE
+  men-disable emoji picker.
 - **Chat threads**: dashboard = `u{user_id}:{thread_id}`, widget =
   `a{agent_id}:{thread_id}`. Public endpoints authenticate with the
   `X-Agent-Token` header (agent.public_token).
+- **/health**: liveness + third-party checks via `GET /health` (lihat
+  `app/services/health.py`). Respon `{status: ok|degraded|down, checks:
+  {database, storage, openrouter}, timestamp}`; tiap check punya status
+  `up` | `down` | `not_configured` (contoh: S3 saat `STORAGE_BACKEND=local`,
+  OpenRouter tanpa `OPENROUTER_API_KEY`). Cek berjalan konkuren, timeout 4s;
+  DB `SELECT 1`, S3 `head_bucket`, OpenRouter GET `/models` (headers saja).
 - **SSE event contract (stable)**: `lifecycle` (running/completed/cancelled/
   failed), `message_start`, `text_delta` (kind `text`|`reasoning`),
   `message_end` (usage), `sources` (exact `{url,title}` list parsed from tool

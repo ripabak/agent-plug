@@ -1,13 +1,14 @@
 """RAG indexing pipeline: fetch → parse → chunk → embed → store → status.
 
-Each source row in Postgres drives the pipeline; the per-agent
-InMemoryVectorStore holds the chunks with {url, title, source_id, agent_id}
-metadata so answers can cite sources and sources can be deleted.
+Each source row in Postgres drives the pipeline; the per-agent pgvector
+collection (PGVector, one per agent) holds the chunks with
+{url, title, source_id, agent_id} metadata so answers can cite sources and
+sources can be deleted. Chunk ids are persisted on `source.chunk_ids`.
 """
 import asyncio
 
 from langchain_core.documents import Document
-from sqlalchemy import select, update
+from sqlalchemy import or_, select, update
 
 from ..database import async_session
 from ..models import Source
@@ -41,9 +42,15 @@ async def index_source(source_id: int, mgr=store_manager) -> None:
         if source is None:
             return
         agent_id = source.agent_id
+        old_ids = source.chunk_ids
         source.status = "fetching"
         source.error = None
         await db.commit()
+
+    # Clear previously indexed chunks first (idempotent re-index). Doing this
+    # before loading content means a failed re-index leaves no stale vectors;
+    # `chunk_ids` is reset to [] in the failure branch below.
+    await mgr.delete_source(agent_id, source_id, ids=old_ids)
 
     try:
         # Load content off the event loop (URL fetch or PDF parse).
@@ -69,14 +76,13 @@ async def index_source(source_id: int, mgr=store_manager) -> None:
             for chunk in chunks
         ]
 
-        # Re-index clears previous chunks of this source first (idempotent).
-        mgr.delete_source(agent_id, source_id)
-        mgr.add_documents(agent_id, source_id, docs)
+        ids = await mgr.add_documents(agent_id, source_id, docs)
 
         async with async_session() as db:
             src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
             src.status = "ready"
             src.chunk_count = len(chunks)
+            src.chunk_ids = ids
             src.error = None
             await db.commit()
     except Exception as exc:  # per-URL failure isolation
@@ -84,6 +90,7 @@ async def index_source(source_id: int, mgr=store_manager) -> None:
             src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
             src.status = "failed"
             src.chunk_count = 0
+            src.chunk_ids = []
             src.error = str(exc)[:500]
             await db.commit()
 
@@ -148,10 +155,22 @@ async def reindex_agent(agent_id: int, only_failed: bool = False, mgr=store_mana
 
 
 async def rebuild_all(mgr=store_manager) -> int:
-    """Rebuild every agent's in-memory index from stored sources (startup)."""
+    """Reconcile every agent's pgvector index with its sources (startup).
+
+    Sources already indexed in PostgreSQL (status='ready' AND chunk_ids set)
+    are skipped — their vectors survive restarts, so startup does not
+    re-fetch/re-embed everything. Sources still pending/failed, or indexed by
+    the pre-pgvector code (chunk_ids IS NULL), are re-indexed.
+    """
+    needs_index = or_(Source.status != "ready", Source.chunk_ids.is_(None))
     async with async_session() as db:
-        agent_ids = (await db.execute(select(Source.agent_id).distinct())).scalars().all()
+        agent_ids = (
+            await db.execute(select(Source.agent_id).distinct().where(needs_index))
+        ).scalars().all()
+        if agent_ids:
+            await db.execute(update(Source).where(needs_index).values(status="pending"))
+            await db.commit()
     total = 0
     for agent_id in agent_ids:
-        total += await reindex_agent(agent_id, mgr=mgr)
+        total += await _run_sources(agent_id, ("pending",), mgr)
     return total

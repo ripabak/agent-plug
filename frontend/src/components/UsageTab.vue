@@ -53,7 +53,9 @@ function goPage(p: number) {
   load()
 }
 
-const requestData = computed<ChartData<'bar'>>(() => requestChartData(data.value?.summary.series ?? []))
+const requestData = computed<ChartData<'bar'>>(() =>
+  requestChartData(data.value?.summary.series ?? []),
+)
 
 const tokenData = computed<ChartData<'bar'>>(() => tokenChartData(data.value?.summary.series ?? []))
 
@@ -156,8 +158,12 @@ onMounted(load)
           <div class="usage-chart-head">
             <h3 style="margin: 0">Tokens</h3>
             <div class="chart-legend">
-              <span class="legend-item"><span class="legend-dot" :style="{ background: PRIMARY }" />Input</span>
-              <span class="legend-item"><span class="legend-dot" :style="{ background: OUTPUT }" />Output</span>
+              <span class="legend-item"
+                ><span class="legend-dot" :style="{ background: PRIMARY }" />Input</span
+              >
+              <span class="legend-item"
+                ><span class="legend-dot" :style="{ background: OUTPUT }" />Output</span
+              >
             </div>
           </div>
           <UsageChart :data="tokenData" />
@@ -193,40 +199,54 @@ onMounted(load)
         <template v-else>
           <div class="usage-table-scroll">
             <table class="usage-table">
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Channel</th>
-                <th>Country</th>
-                <th>Model</th>
-                <th class="num">Input</th>
-                <th class="num">Output</th>
-                <th class="num">Total</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="item in data.items" :key="item.id">
-                <td class="usage-time">{{ fmtTime(item.created_at) }}</td>
-                <td>{{ channelLabel(item.channel) }}</td>
-                <td class="usage-country">
-                  <template v-if="item.country">{{ countryFlag(item.country) }} {{ countryName(item.country) }}</template>
-                  <template v-else>—</template>
-                </td>
-                <td class="usage-model">{{ item.model || '—' }}</td>
-                <td class="num">{{ item.input_tokens.toLocaleString() }}</td>
-                <td class="num">{{ item.output_tokens.toLocaleString() }}</td>
-                <td class="num"><strong>{{ item.total_tokens.toLocaleString() }}</strong></td>
-                <td><span :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span></td>
-              </tr>
-            </tbody>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Channel</th>
+                  <th>Country</th>
+                  <th>Model</th>
+                  <th class="num">Input</th>
+                  <th class="num">Output</th>
+                  <th class="num">Total</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in data.items" :key="item.id">
+                  <td class="usage-time">{{ fmtTime(item.created_at) }}</td>
+                  <td>{{ channelLabel(item.channel) }}</td>
+                  <td class="usage-country">
+                    <template v-if="item.country"
+                      >{{ countryFlag(item.country) }} {{ countryName(item.country) }}</template
+                    >
+                    <template v-else>—</template>
+                  </td>
+                  <td class="usage-model">{{ item.model || '—' }}</td>
+                  <td class="num">{{ item.input_tokens.toLocaleString() }}</td>
+                  <td class="num">{{ item.output_tokens.toLocaleString() }}</td>
+                  <td class="num">
+                    <strong>{{ item.total_tokens.toLocaleString() }}</strong>
+                  </td>
+                  <td>
+                    <span :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span>
+                  </td>
+                </tr>
+              </tbody>
             </table>
           </div>
 
           <div class="pagination">
-            <button class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="goPage(page - 1)">← Prev</button>
+            <button class="btn btn-ghost btn-sm" :disabled="page <= 1" @click="goPage(page - 1)">
+              ← Prev
+            </button>
             <span class="muted">Page {{ data.page }} of {{ data.pages }}</span>
-            <button class="btn btn-ghost btn-sm" :disabled="page >= data.pages" @click="goPage(page + 1)">Next →</button>
+            <button
+              class="btn btn-ghost btn-sm"
+              :disabled="page >= data.pages"
+              @click="goPage(page + 1)"
+            >
+              Next →
+            </button>
           </div>
         </template>
       </div>

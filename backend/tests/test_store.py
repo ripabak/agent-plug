@@ -1,4 +1,4 @@
-"""Unit tests for the RAG store manager (InMemoryVectorStore per agent)."""
+"""Unit tests for the RAG store manager (pgvector collection per agent)."""
 import hashlib
 
 import pytest
@@ -37,7 +37,7 @@ def _docs(agent_id: int, source_id: int, text: str) -> list[Document]:
 async def test_add_and_search_returns_sources():
     mgr = RAGStoreManager(FakeEmbeddings())
     docs = _docs(agent_id=1, source_id=10, text="Apple banana cherry. " * 20)
-    ids = mgr.add_documents(1, 10, docs)
+    ids = await mgr.add_documents(1, 10, docs)
     assert len(ids) == len(docs)
 
     results = await mgr.asearch(1, "apple banana", k=2)
@@ -49,8 +49,8 @@ async def test_add_and_search_returns_sources():
 @pytest.mark.asyncio
 async def test_stores_are_isolated_per_agent():
     mgr = RAGStoreManager(FakeEmbeddings())
-    mgr.add_documents(1, 1, _docs(1, 1, "apple " * 50))
-    mgr.add_documents(2, 2, _docs(2, 2, "banana " * 50))
+    await mgr.add_documents(1, 1, _docs(1, 1, "apple " * 50))
+    await mgr.add_documents(2, 2, _docs(2, 2, "banana " * 50))
     # Agent 1's store must never surface agent 2's docs (and vice versa).
     assert all(doc.metadata["source_id"] == 1 for doc in await mgr.asearch(1, "banana", k=3))
     assert all(doc.metadata["source_id"] == 2 for doc in await mgr.asearch(2, "apple", k=3))
@@ -59,10 +59,10 @@ async def test_stores_are_isolated_per_agent():
 @pytest.mark.asyncio
 async def test_delete_source_removes_only_that_source():
     mgr = RAGStoreManager(FakeEmbeddings())
-    mgr.add_documents(1, 10, _docs(1, 10, "apple " * 40))
-    mgr.add_documents(1, 11, _docs(1, 11, "cherry " * 40))
+    await mgr.add_documents(1, 10, _docs(1, 10, "apple " * 40))
+    await mgr.add_documents(1, 11, _docs(1, 11, "cherry " * 40))
 
-    removed = mgr.delete_source(1, 10)
+    removed = await mgr.delete_source(1, 10)
     assert removed > 0
 
     apple_hits = await mgr.asearch(1, "apple", k=10)
@@ -74,7 +74,7 @@ async def test_delete_source_removes_only_that_source():
 @pytest.mark.asyncio
 async def test_delete_agent_drops_store():
     mgr = RAGStoreManager(FakeEmbeddings())
-    mgr.add_documents(1, 1, _docs(1, 1, "apple " * 40))
-    mgr.delete_agent(1)
+    await mgr.add_documents(1, 1, _docs(1, 1, "apple " * 40))
+    await mgr.delete_agent(1)
     assert await mgr.asearch(1, "apple", k=5) == []
 

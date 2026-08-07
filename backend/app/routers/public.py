@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_db
 from ..models import Agent
 from ..schemas import AgentPublicConfig, CommandResponse, RunStartInput
+from ..storage import storage
 from ..services.agent_session_service import (
     get_thread_history,
     start_agent_run,
@@ -43,13 +44,38 @@ def _error(cmd_id, code: str, message: str) -> CommandResponse:
     return CommandResponse(type="error", id=cmd_id, error=code, message=message)
 
 
+@router.get("/agents/{agent_id}/avatar")
+async def get_avatar(agent_id: int, db: AsyncSession = Depends(get_db)):
+    """Serve the agent's avatar image (public — needed by <img> in the widget).
+
+    No token: an avatar is a non-sensitive logo, and image tags cannot send
+    the X-Agent-Token header. Falls back to 404 when no photo is uploaded.
+    """
+    result = await db.execute(select(Agent).where(Agent.id == agent_id))
+    agent = result.scalar_one_or_none()
+    if agent is None or not agent.avatar_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Avatar not found")
+    data = await storage.get(agent.avatar_path)
+    return Response(
+        content=data,
+        media_type="image/webp",
+        headers={"Cache-Control": "public, max-age=3600"},
+    )
+
+
 @router.get("/agents/{agent_id}/config", response_model=AgentPublicConfig)
 async def get_agent_config(
     agent_id: int,
+    response: Response,
     x_agent_token: str | None = Header(default=None, alias="X-Agent-Token"),
     db: AsyncSession = Depends(get_db),
 ):
-    """Public bootstrap data for the widget (non-secret fields only)."""
+    """Public bootstrap data for the widget (non-secret fields only).
+
+    `Cache-Control: no-cache` so the widget always revalidates — config
+    changes (theme, avatar URL) must not be served from a stale cache.
+    """
+    response.headers["Cache-Control"] = "no-cache"
     agent = await _get_agent_by_token(agent_id, x_agent_token, db)
     return AgentPublicConfig.model_validate(agent)
 

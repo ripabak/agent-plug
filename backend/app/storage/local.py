@@ -49,6 +49,3 @@ class LocalStorage:
 
     async def exists(self, key: str) -> bool:
         return self._path_for(key).is_file()
-
-    async def replace(self, key: str, data: bytes, content_type: str | None = None) -> None:
-        await self.put(key, data, content_type)

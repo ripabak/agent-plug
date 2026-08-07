@@ -29,15 +29,21 @@ async def get_db():
 async def init_db() -> None:
     """Create all tables if they don't exist (used in app lifespan and tests)."""
     async with engine.begin() as conn:
+        # pgvector extension must exist before langchain-postgres creates the
+        # vector tables (idempotent; the postgres role can install it).
+        await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         await conn.run_sync(Base.metadata.create_all)
         # Idempotent migrations for existing dev databases (MVP: no alembic).
         for statement in (
+            "ALTER TABLE source ADD COLUMN IF NOT EXISTS chunk_ids JSONB",
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS kind VARCHAR NOT NULL DEFAULT 'url'",
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS file_name VARCHAR",
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS file_path VARCHAR",
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS file_size INTEGER",
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS text_content TEXT",
             "ALTER TABLE agent_usage ADD COLUMN IF NOT EXISTS country VARCHAR",
+            "ALTER TABLE agent ADD COLUMN IF NOT EXISTS avatar_path VARCHAR",
+            "ALTER TABLE agent ADD COLUMN IF NOT EXISTS avatar_kind VARCHAR NOT NULL DEFAULT 'photo'",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS chat_theme TEXT DEFAULT ''",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_thinking BOOLEAN DEFAULT TRUE",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_tools BOOLEAN DEFAULT TRUE",

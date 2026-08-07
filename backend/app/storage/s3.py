@@ -102,9 +102,6 @@ class S3Storage:
 
         return await asyncio.to_thread(_head)
 
-    async def replace(self, key: str, data: bytes, content_type: str | None = None) -> None:
-        await self.put(key, data, content_type)
-
 
 def _make_client(endpoint_url: str, access_key: str, secret_key: str, region: str) -> BaseClient:
     import boto3

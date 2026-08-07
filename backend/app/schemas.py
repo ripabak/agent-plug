@@ -66,6 +66,8 @@ class AgentResponse(BaseModel):
     welcome_message: str
     theme_color: str
     avatar_emoji: str
+    avatar_url: str | None = None
+    avatar_kind: str = "photo"
     chat_theme: str
     show_thinking: bool
     show_tools: bool
@@ -90,6 +92,8 @@ class AgentPublicConfig(BaseModel):
     welcome_message: str
     theme_color: str
     avatar_emoji: str
+    avatar_url: str | None = None
+    avatar_kind: str = "photo"
     chat_theme: str
     show_thinking: bool
     show_tools: bool

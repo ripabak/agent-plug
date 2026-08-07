@@ -8,9 +8,10 @@ import type { Agent, EmbedResponse, Source, TokenResponse, User } from '@/api/ty
 vi.mock('@/api/client', () => ({
   api: {
     login: vi.fn<(data: { email: string; password: string }) => Promise<TokenResponse>>(),
-    register: vi.fn<
-      (data: { email: string; display_name: string; password: string }) => Promise<TokenResponse>
-    >(),
+    register:
+      vi.fn<
+        (data: { email: string; display_name: string; password: string }) => Promise<TokenResponse>
+      >(),
     me: vi.fn<(token: string) => Promise<User>>(),
     listAgents: vi.fn<(token: string) => Promise<Agent[]>>(),
     createAgent: vi.fn<(token: string, data: Partial<Agent>) => Promise<Agent>>(),
@@ -22,9 +23,10 @@ vi.mock('@/api/client', () => ({
     listSources: vi.fn<(token: string, agentId: number) => Promise<Source[]>>(),
     addSources: vi.fn<(token: string, agentId: number, urls: string[]) => Promise<Source[]>>(),
     deleteSource: vi.fn<(token: string, agentId: number, sourceId: number) => Promise<void>>(),
-    reindexSources: vi.fn<
-      (token: string, agentId: number, onlyFailed?: boolean) => Promise<{ scheduled: number }>
-    >(),
+    reindexSources:
+      vi.fn<
+        (token: string, agentId: number, onlyFailed?: boolean) => Promise<{ scheduled: number }>
+      >(),
   },
   ApiError: class ApiError extends Error {},
   getStoredToken: () => '',
@@ -70,7 +72,12 @@ describe('auth store', () => {
     localStorage.setItem('ap_token', 'stored-token')
     const store = useAuthStore()
 
-    vi.mocked(api.me).mockResolvedValue({ id: 1, email: 'a@b.c', display_name: 'A', created_at: 'now' })
+    vi.mocked(api.me).mockResolvedValue({
+      id: 1,
+      email: 'a@b.c',
+      display_name: 'A',
+      created_at: 'now',
+    })
     await store.bootstrap()
     expect(store.user?.email).toBe('a@b.c')
 

@@ -3,7 +3,13 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useAgentsStore } from '@/stores/agents'
 import { useChatStore } from '@/stores/chat'
 import { API_BASE } from '@/api/client'
-import { THEME_PRESETS, softenColor, themeToCssVars, type ChatColorKey, type ChatTheme } from '@/utils/themes'
+import {
+  THEME_PRESETS,
+  softenColor,
+  themeToCssVars,
+  type ChatColorKey,
+  type ChatTheme,
+} from '@/utils/themes'
 import ColorPreview from '@/components/ColorPreview.vue'
 
 /** Bridge exposed by backend/app/widget/widget.js after it initializes. */
@@ -86,8 +92,18 @@ const COLOR_GROUPS: ColorGroup[] = [
     controls: [
       // Chip border + text are merged into one color; the background is
       // derived automatically (soft version of the same color).
-      { key: 'toolSuccessBorder', label: 'Chip', keys: ['toolSuccessText'], softKey: 'toolSuccessBg' },
-      { key: 'toolErrorBorder', label: 'Chip error', keys: ['toolErrorText'], softKey: 'toolErrorBg' },
+      {
+        key: 'toolSuccessBorder',
+        label: 'Chip',
+        keys: ['toolSuccessText'],
+        softKey: 'toolSuccessBg',
+      },
+      {
+        key: 'toolErrorBorder',
+        label: 'Chip error',
+        keys: ['toolErrorText'],
+        softKey: 'toolErrorBg',
+      },
     ],
   },
   {
@@ -278,8 +294,8 @@ function onColorInput(e: Event, c: ColorControl) {
          launcher + panel as the live embed. Auto-opens on desktop; on mobile
          the launcher button (bottom-right) opens it. -->
     <p class="preview-widget-hint">
-      💬 Chat preview = live widget (floating). Auto-opens on desktop; on
-      mobile, tap the launcher at the bottom-right.
+      💬 Chat preview = live widget (floating). Auto-opens on desktop; on mobile, tap the launcher
+      at the bottom-right.
     </p>
     <div ref="widgetHost" class="preview-widget-host" />
   </div>

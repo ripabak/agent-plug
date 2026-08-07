@@ -22,6 +22,8 @@ export interface Agent {
   welcome_message: string
   theme_color: string
   avatar_emoji: string
+  avatar_url: string | null
+  avatar_kind: 'photo' | 'template'
   chat_theme: string
   show_thinking: boolean
   show_tools: boolean

@@ -34,7 +34,9 @@ async function submit() {
 <template>
   <div class="page page-narrow">
     <div class="topbar">
-      <RouterLink to="/dashboard" class="brand"><span class="logo-mark">🤖</span> Agent-Plug</RouterLink>
+      <RouterLink to="/dashboard" class="brand"
+        ><span class="logo-mark">🤖</span> Agent-Plug</RouterLink
+      >
       <RouterLink to="/dashboard" class="btn btn-ghost btn-sm">← Back</RouterLink>
     </div>
 
@@ -47,11 +49,22 @@ async function submit() {
       <form @submit.prevent="submit">
         <div class="form-group">
           <label for="name">Agent name *</label>
-          <input id="name" v-model="form.name" type="text" placeholder="e.g. Acme Support Bot" required />
+          <input
+            id="name"
+            v-model="form.name"
+            type="text"
+            placeholder="e.g. Acme Support Bot"
+            required
+          />
         </div>
         <div class="form-group">
           <label for="desc">Description</label>
-          <textarea id="desc" v-model="form.description" rows="2" placeholder="What does this agent do?" />
+          <textarea
+            id="desc"
+            v-model="form.description"
+            rows="2"
+            placeholder="What does this agent do?"
+          />
         </div>
         <div class="form-group">
           <label for="welcome">Welcome message</label>

@@ -213,7 +213,11 @@ export function applyThemeOverrides(base: ChatTheme, overrides: Partial<ChatThem
  */
 export function softenColor(hex: string, alpha = 0.12): string {
   let h = String(hex).trim().replace(/^#/, '')
-  if (h.length === 3) h = h.split('').map((c) => c + c).join('')
+  if (h.length === 3)
+    h = h
+      .split('')
+      .map((c) => c + c)
+      .join('')
   if (!/^[0-9a-fA-F]{6}$/.test(h)) return hex
   const n = parseInt(h, 16)
   const r = (n >> 16) & 255

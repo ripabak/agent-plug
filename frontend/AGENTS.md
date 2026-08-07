@@ -30,6 +30,8 @@ frontend/
     components/             # ConfigureTab, KnowledgeTab (3 input modes), PreviewTab, EmbedTab, StatusBadge
     assets/main.css         # minimal design system (no UI framework)
   public/demo.html          # widget demo page (query params: agent, token, base)
+  public/avatars/templates/ # bundled animated GIF avatar templates (10 presets)
+  scripts/generate-avatar-templates.py  # regenerate templates (Pillow, macOS emoji font)
 ```
 
 ## Commands (run all before finishing)
@@ -82,6 +84,11 @@ bun format            # prettier
 - **Knowledge tab**: 3 input modes (🌐 URLs / 📄 PDF / 📝 Text) via the
   `source-modes` switcher; status polling every 3s while any source is
   pending/fetching/indexing.
+- **Avatar GIF templates**: `public/avatars/templates/*.gif` + manifest
+  `src/utils/avatarTemplates.ts` (keep in sync with the generator script).
+  Picking a template fetches the GIF and uploads it through the normal avatar
+  pipeline (`PUT /api/agents/{id}/avatar`), so it is compressed to WebP and
+  stays animated — no separate backend handling.
 - **Testing**: every new store/util/component gets a test under
   `src/**/__tests__/`. Mock `@/api/client` in store/component tests. IMPORTANT:
   the lint rule `vitest/require-mock-type-parameters` requires **typed** mocks —

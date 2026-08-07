@@ -64,7 +64,9 @@ bun dev
   welcome message, theme, avatar) and a `public_token` for widget auth.
 - **Source** — one knowledge input per agent: `kind=url` (web page),
   `kind=pdf` (uploaded file), or `kind=text` (pasted long text). Indexed into
-  a per-agent `InMemoryVectorStore` (rebuilt on startup).
+  a per-agent pgvector collection in PostgreSQL (`agent_{agent_id}`). On
+  startup only sources not yet indexed (or pre-pgvector leftovers) are
+  re-embedded; ready sources keep their vectors across restarts.
 - **Thread** — a conversation; dashboard = `u{user_id}:{thread_id}`,
   widget = `a{agent_id}:{thread_id}`.
 - **Embed snippet** — `<script data-agent-id data-token data-base-url>` served

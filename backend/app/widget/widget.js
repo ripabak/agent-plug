@@ -577,6 +577,25 @@
     });
   }
 
+  // Avatar element: photo/template (img) when uploaded, otherwise the emoji
+  // fallback. The 30x30 size comes from the CSS class only — setting
+  // width/height inline would blow the img up to the header width.
+  //   - kind 'template' (animated GIF/emoji): keeps the circle background
+  //     (translucent white on the header), like the emoji avatar.
+  //   - kind 'photo' (uploaded logo): transparent, so PNG transparency
+  //     floats without a color behind it.
+  function avatarEl() {
+    if (config.avatar_url) {
+      var img = el('img', { class: uid + '-avatar', alt: '', 'aria-hidden': 'true' });
+      img.src = config.avatar_url;
+      img.style.objectFit = 'contain';
+      img.style.borderRadius = '50%';
+      if (config.avatar_kind === 'photo') img.style.background = 'transparent';
+      return img;
+    }
+    return el('div', { class: uid + '-avatar', text: config.avatar_emoji || '🤖' });
+  }
+
   function renderPanel() {
     var panel = document.getElementById(uid + '-panel');
     if (panel) return panel;
@@ -584,7 +603,7 @@
     panel = el('div', { class: uid + '-panel apw-hidden', id: uid + '-panel' });
 
     var header = el('div', { class: uid + '-header' });
-    el('div', { class: uid + '-avatar', text: config.avatar_emoji || '🤖' }, header);
+    header.appendChild(avatarEl());
     var titleBox = el('div', {});
     el('div', { class: uid + '-title', text: config.name }, titleBox);
     if (config.description) el('div', { class: uid + '-subtitle', text: config.description }, titleBox);
@@ -617,7 +636,18 @@
     var btn = document.getElementById(uid + '-launcher');
     if (btn) return btn;
     btn = el('button', { class: uid + '-launcher', id: uid + '-launcher', 'aria-label': 'Open chat' });
-    btn.textContent = config.avatar_emoji || '💬';
+    if (config.avatar_url) {
+      // 'template' keeps the class background (header color circle) so the
+      // animated emoji sits on a colored button like the emoji avatar;
+      // 'photo' clears it first so transparent logos float.
+      if (config.avatar_kind === 'photo') btn.style.background = 'transparent';
+      btn.style.backgroundImage = "url('" + config.avatar_url + "')";
+      btn.style.backgroundSize = 'contain';
+      btn.style.backgroundPosition = 'center';
+      btn.style.backgroundRepeat = 'no-repeat';
+    } else {
+      btn.textContent = config.avatar_emoji || '💬';
+    }
     btn.addEventListener('click', toggle);
     document.body.appendChild(btn);
     return btn;
@@ -884,7 +914,9 @@
     };
   }
 
-  apiFetch('/api/public/agents/' + agentId + '/config')
+  // Cache-bust: the config (theme, avatar URL) must be fresh on every load;
+  // the backend also sends Cache-Control: no-cache for this endpoint.
+  apiFetch('/api/public/agents/' + agentId + '/config?t=' + Date.now())
     .then(function (r) {
       if (!r.ok) throw new Error('Agent config unavailable (check token?)');
       return r.json();

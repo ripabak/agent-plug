@@ -52,7 +52,9 @@ onMounted(async () => {
 <template>
   <div class="page">
     <div class="topbar">
-      <RouterLink to="/dashboard" class="brand"><span class="logo-mark">🤖</span> Agent-Plug</RouterLink>
+      <RouterLink to="/dashboard" class="brand"
+        ><span class="logo-mark">🤖</span> Agent-Plug</RouterLink
+      >
       <RouterLink to="/dashboard" class="btn btn-ghost btn-sm">← All agents</RouterLink>
     </div>
 
@@ -60,7 +62,17 @@ onMounted(async () => {
     <template v-else-if="agentsStore.current">
       <div class="topbar" style="margin-bottom: 8px">
         <div class="agent-head">
-          <span class="agent-avatar" :style="{ background: agentsStore.current.theme_color + '22' }">
+          <img
+            v-if="agentsStore.current.avatar_url"
+            :src="agentsStore.current.avatar_url"
+            class="agent-avatar"
+            alt=""
+          />
+          <span
+            v-else
+            class="agent-avatar"
+            :style="{ background: agentsStore.current.theme_color + '22' }"
+          >
             {{ agentsStore.current.avatar_emoji }}
           </span>
           <div class="agent-head-info">
@@ -71,12 +83,18 @@ onMounted(async () => {
       </div>
 
       <div v-if="showCreatedHint" class="hint">
-        ✅ Agent created! Now add your website URLs to the knowledge base — the agent will
-        answer from them once indexing finishes.
+        ✅ Agent created! Now add your website URLs to the knowledge base — the agent will answer
+        from them once indexing finishes.
       </div>
 
       <div class="tabs">
-        <button v-for="t in tabs" :key="t.key" class="tab" :class="{ active: activeTab === t.key }" @click="setTab(t.key)">
+        <button
+          v-for="t in tabs"
+          :key="t.key"
+          class="tab"
+          :class="{ active: activeTab === t.key }"
+          @click="setTab(t.key)"
+        >
           {{ t.label }}
         </button>
       </div>

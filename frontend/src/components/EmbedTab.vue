@@ -42,8 +42,8 @@ async function copy() {
   <div class="card">
     <h3 style="margin-top: 0">Embed on your website</h3>
     <p class="muted">
-      Copy this snippet and paste it anywhere in your website's HTML
-      (<code>&lt;body&gt;</code>). Visitors will see a floating chat button at the bottom-right.
+      Copy this snippet and paste it anywhere in your website's HTML (<code>&lt;body&gt;</code>).
+      Visitors will see a floating chat button at the bottom-right.
     </p>
 
     <div v-if="error" class="error-box">{{ error }}</div>
@@ -51,8 +51,12 @@ async function copy() {
     <pre class="code-block" data-testid="embed-code">{{ embedHtml }}</pre>
 
     <div style="display: flex; gap: 10px; flex-wrap: wrap">
-      <button class="btn" :disabled="!embedHtml" @click="copy">{{ copied ? 'Copied ✓' : 'Copy snippet' }}</button>
-      <a class="btn btn-secondary" :href="demoUrl" target="_blank" rel="noopener noreferrer">Open demo page</a>
+      <button class="btn" :disabled="!embedHtml" @click="copy">
+        {{ copied ? 'Copied ✓' : 'Copy snippet' }}
+      </button>
+      <a class="btn btn-secondary" :href="demoUrl" target="_blank" rel="noopener noreferrer"
+        >Open demo page</a
+      >
     </div>
 
     <hr style="border: none; border-top: 1px solid var(--border); margin: 20px 0" />

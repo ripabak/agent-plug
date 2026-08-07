@@ -53,7 +53,13 @@ function barDataset(label: string, data: number[], color: string) {
 export function requestChartData(series: UsageSeriesPoint[]): ChartData<'bar'> {
   return {
     labels: series.map((p) => shortDate(p.date)),
-    datasets: [barDataset('Requests', series.map((p) => p.requests), PRIMARY)],
+    datasets: [
+      barDataset(
+        'Requests',
+        series.map((p) => p.requests),
+        PRIMARY,
+      ),
+    ],
   }
 }
 
@@ -62,8 +68,22 @@ export function tokenChartData(series: UsageSeriesPoint[]): ChartData<'bar'> {
   return {
     labels: series.map((p) => shortDate(p.date)),
     datasets: [
-      { ...barDataset('Input', series.map((p) => p.input_tokens), PRIMARY), stack: 'tokens' },
-      { ...barDataset('Output', series.map((p) => p.output_tokens), OUTPUT), stack: 'tokens' },
+      {
+        ...barDataset(
+          'Input',
+          series.map((p) => p.input_tokens),
+          PRIMARY,
+        ),
+        stack: 'tokens',
+      },
+      {
+        ...barDataset(
+          'Output',
+          series.map((p) => p.output_tokens),
+          OUTPUT,
+        ),
+        stack: 'tokens',
+      },
     ],
   }
 }

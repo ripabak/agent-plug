@@ -30,6 +30,8 @@ const AGENT: Agent = {
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',
+  avatar_url: null,
+  avatar_kind: 'photo',
   chat_theme: '',
   show_thinking: true,
   show_tools: true,
@@ -74,7 +76,9 @@ describe('PreviewTab floating widget preview', () => {
 
   it('pushes show thinking/tools toggles into the running widget', async () => {
     const setOpts = vi.fn<(s: boolean, t: boolean) => void>()
-    window.__apwWidgets = { '1': { setTheme: vi.fn<(t: ChatTheme) => void>(), setOpts, destroy: vi.fn<() => void>() } }
+    window.__apwWidgets = {
+      '1': { setTheme: vi.fn<(t: ChatTheme) => void>(), setOpts, destroy: vi.fn<() => void>() },
+    }
     const wrapper = mount(PreviewTab)
     const chat = useChatStore()
     chat.setSetting('showThinking', false)
@@ -85,7 +89,13 @@ describe('PreviewTab floating widget preview', () => {
 
   it('destroys the widget bridge on unmount', () => {
     const destroy = vi.fn<() => void>()
-    window.__apwWidgets = { '1': { setTheme: vi.fn<(t: ChatTheme) => void>(), setOpts: vi.fn<(s: boolean, t: boolean) => void>(), destroy } }
+    window.__apwWidgets = {
+      '1': {
+        setTheme: vi.fn<(t: ChatTheme) => void>(),
+        setOpts: vi.fn<(s: boolean, t: boolean) => void>(),
+        destroy,
+      },
+    }
     const wrapper = mount(PreviewTab)
     wrapper.unmount()
     expect(destroy).toHaveBeenCalled()

@@ -42,6 +42,16 @@ export const useAgentsStore = defineStore('agents', () => {
     current.value = await api.regenerateToken(auth.token, current.value.id)
   }
 
+  async function uploadAvatar(file: File, kind: 'photo' | 'template' = 'photo') {
+    if (!current.value) return
+    current.value = await api.uploadAgentAvatar(auth.token, current.value.id, file, kind)
+  }
+
+  async function removeAvatar() {
+    if (!current.value) return
+    current.value = await api.deleteAgentAvatar(auth.token, current.value.id)
+  }
+
   async function fetchSources(agentId: number) {
     sources.value = await api.listSources(auth.token, agentId)
   }
@@ -71,6 +81,8 @@ export const useAgentsStore = defineStore('agents', () => {
     update,
     remove,
     regenerateToken,
+    uploadAvatar,
+    removeAvatar,
     fetchSources,
     addSources,
     deleteSource,

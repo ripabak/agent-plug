@@ -2,15 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
 
 import { useChatStore } from '../chat'
-import type { TokenResponse, User } from '@/api/types'
+import type { Agent, TokenResponse, User } from '@/api/types'
 
 vi.mock('@/api/client', () => ({
   api: {
     me: vi.fn<(token: string) => Promise<User>>(),
     login: vi.fn<(data: { email: string; password: string }) => Promise<TokenResponse>>(),
-    register: vi.fn<
-      (data: { email: string; display_name: string; password: string }) => Promise<TokenResponse>
-    >(),
+    register:
+      vi.fn<
+        (data: { email: string; display_name: string; password: string }) => Promise<TokenResponse>
+      >(),
     updateAgent: vi.fn<() => Promise<never>>(),
   },
   ApiError: class ApiError extends Error {},
@@ -18,7 +19,7 @@ vi.mock('@/api/client', () => ({
   API_BASE: 'http://localhost:8000',
 }))
 
-const AGENT = {
+const AGENT: Agent = {
   id: 1,
   user_id: 1,
   name: 'Bot',
@@ -27,6 +28,8 @@ const AGENT = {
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',
+  avatar_url: null,
+  avatar_kind: 'photo',
   chat_theme: '',
   show_thinking: true,
   show_tools: true,
@@ -48,7 +51,11 @@ describe('chat display-config store', () => {
     chat.setSetting('showThinking', false)
     const agent = {
       ...AGENT,
-      chat_theme: JSON.stringify({ preset: 'slate', custom: { headerBg: '#123456' }, touched: true }),
+      chat_theme: JSON.stringify({
+        preset: 'slate',
+        custom: { headerBg: '#123456' },
+        touched: true,
+      }),
       show_thinking: false,
       show_tools: true,
     }
@@ -62,7 +69,11 @@ describe('chat display-config store', () => {
 
   it('sets several tokens at once (merged chip border+text + soft bg)', () => {
     const chat = useChatStore()
-    chat.setThemeColors({ toolSuccessBorder: '#16a34a', toolSuccessText: '#16a34a', toolSuccessBg: 'rgba(22, 163, 74, 0.12)' })
+    chat.setThemeColors({
+      toolSuccessBorder: '#16a34a',
+      toolSuccessText: '#16a34a',
+      toolSuccessBg: 'rgba(22, 163, 74, 0.12)',
+    })
     expect(chat.themeColors.toolSuccessBorder).toBe('#16a34a')
     expect(chat.themeColors.toolSuccessText).toBe('#16a34a')
     expect(chat.themeColors.toolSuccessBg).toBe('rgba(22, 163, 74, 0.12)')

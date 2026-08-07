@@ -1,7 +1,8 @@
-"""Knowledge base routes: add/list/delete/replace/reindex URL sources and PDF uploads."""
+"""Knowledge base routes: add/list/get-file/delete/reindex URL sources and PDF uploads."""
 import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -163,6 +164,38 @@ async def list_sources(agent_id: int, user: User = Depends(get_current_user), db
     return [SourceResponse.model_validate(s) for s in result.scalars().all()]
 
 
+@router.get("/{source_id}/file")
+async def get_source_file(
+    agent_id: int,
+    source_id: int,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Serve the uploaded PDF so the dashboard can open/download it.
+
+    Authed (Bearer) — used by the dashboard's clickable document link; the
+    widget cites PDFs via `file://…` markers resolved server-side instead.
+    """
+    await _get_owned_agent(db, agent_id, user)
+    result = await db.execute(
+        select(Source).where(Source.id == source_id, Source.agent_id == agent_id)
+    )
+    source = result.scalar_one_or_none()
+    if source is None or source.kind != "pdf" or not source.file_path:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
+
+    data = await storage.get(source.file_path)
+    filename = (source.file_name or "document.pdf").replace('"', "_").replace("\\", "_")
+    return Response(
+        content=data,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'inline; filename="{filename}"',
+            "Cache-Control": "private, max-age=3600",
+        },
+    )
+
+
 @router.delete("/{source_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_source(
     agent_id: int,
@@ -170,7 +203,7 @@ async def delete_source(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Delete a source and remove its chunks from the in-memory index."""
+    """Delete a source and remove its chunks from the vector index."""
     await _get_owned_agent(db, agent_id, user)
     result = await db.execute(
         select(Source).where(Source.id == source_id, Source.agent_id == agent_id)
@@ -179,64 +212,12 @@ async def delete_source(
     if source is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
 
-    store_manager.delete_source(agent_id, source_id)
+    await store_manager.delete_source(agent_id, source_id, ids=source.chunk_ids)
     # Remove the stored file from the storage backend (best-effort, idempotent).
     if source.file_path:
         await storage.delete(source.file_path)
     await db.delete(source)
     await db.commit()
-
-
-@router.put("/{source_id}/file", response_model=SourceResponse)
-async def replace_source_file(
-    agent_id: int,
-    source_id: int,
-    file: UploadFile = File(...),
-    user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    """Replace the PDF of an existing pdf source and re-index it.
-
-    The new bytes overwrite the SAME storage key, so the `file://…` citation
-    URL stays stable and no orphan object is left behind.
-    """
-    await _get_owned_agent(db, agent_id, user)
-    result = await db.execute(
-        select(Source).where(Source.id == source_id, Source.agent_id == agent_id)
-    )
-    source = result.scalar_one_or_none()
-    if source is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source not found")
-    if source.kind != "pdf" or not source.file_path:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Only PDF sources can be replaced",
-        )
-
-    name = file.filename or ""
-    if not name.lower().endswith(".pdf"):
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail=f"{name!r} is not a PDF")
-    data = await file.read()
-    if len(data) > UPLOAD_MAX_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=f"{name!r} exceeds the {UPLOAD_MAX_SIZE // (1024 * 1024)}MB limit",
-        )
-
-    # Same key → in-place overwrite on both backends (S3 put_object is atomic).
-    await storage.replace(source.file_path, data, content_type="application/pdf")
-
-    source.file_name = name
-    source.file_size = len(data)
-    source.status = "pending"
-    source.error = None
-    source.chunk_count = 0
-    await db.commit()
-    await db.refresh(source)
-
-    # Fire-and-forget re-index with the new content; frontend polls status.
-    await index_pending_sources(agent_id)
-    return SourceResponse.model_validate(source)
 
 
 @router.post("/reindex", response_model=dict)

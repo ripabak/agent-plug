@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { api } from '@/api/client'
 import { useAuthStore } from '@/stores/auth'
 import { useAgentsStore } from '@/stores/agents'
-import type { SourceStatus } from '@/api/types'
+import type { Source, SourceStatus } from '@/api/types'
 import { RUNNING_SOURCE_STATUSES } from '@/api/types'
 import StatusBadge from './StatusBadge.vue'
 
@@ -60,6 +60,7 @@ async function addUrls() {
 const fileInput = ref<HTMLInputElement | null>(null)
 const dragOver = ref(false)
 const uploading = ref(false)
+const openingPdf = ref(false)
 
 function pickFiles() {
   fileInput.value?.click()
@@ -100,40 +101,20 @@ async function removeSource(sourceId: number) {
   await agentsStore.deleteSource(agentId.value, sourceId)
 }
 
-// ---- PDF replace (PUT /sources/{id}/file — same key, re-indexed) ----
-const replaceInput = ref<HTMLInputElement | null>(null)
-const replacingId = ref<number | null>(null)
-const replacing = ref(false)
-
-function startReplace(sourceId: number) {
-  if (replacing.value) return
-  replacingId.value = sourceId
-  replaceInput.value?.click()
-}
-
-async function onReplaceChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  const sourceId = replacingId.value
-  if (sourceId === null) return
-  input.value = ''
-  replacingId.value = null
-  if (!file) return
-  if (!file.name.toLowerCase().endsWith('.pdf')) {
-    error.value = 'Only .pdf files are supported.'
-    return
-  }
-  replacing.value = true
+/** Open an uploaded PDF in a new tab (fetched with the auth header as a blob). */
+async function openPdf(s: Source) {
+  if (openingPdf.value) return
+  openingPdf.value = true
   error.value = ''
-  notice.value = ''
   try {
-    const updated = await api.replaceSourceFile(auth.token, agentId.value, sourceId, file)
-    notice.value = `Replaced ${updated.file_name} — re-indexing started.`
-    await load()
+    const blob = await api.getSourceFile(auth.token, agentId.value, s.id)
+    const url = URL.createObjectURL(blob)
+    window.open(url, '_blank', 'noopener')
+    setTimeout(() => URL.revokeObjectURL(url), 60_000)
   } catch (err) {
-    error.value = err instanceof Error ? err.message : 'Replace failed'
+    error.value = err instanceof Error ? err.message : 'Failed to open document'
   } finally {
-    replacing.value = false
+    openingPdf.value = false
   }
 }
 
@@ -194,9 +175,27 @@ async function addText() {
 
       <!-- input mode switcher -->
       <div class="source-modes">
-        <button class="source-mode" :class="{ active: inputMode === 'url' }" @click="inputMode = 'url'">🌐 URLs</button>
-        <button class="source-mode" :class="{ active: inputMode === 'pdf' }" @click="inputMode = 'pdf'">📄 PDF</button>
-        <button class="source-mode" :class="{ active: inputMode === 'text' }" @click="inputMode = 'text'">📝 Text</button>
+        <button
+          class="source-mode"
+          :class="{ active: inputMode === 'url' }"
+          @click="inputMode = 'url'"
+        >
+          🌐 URLs
+        </button>
+        <button
+          class="source-mode"
+          :class="{ active: inputMode === 'pdf' }"
+          @click="inputMode = 'pdf'"
+        >
+          📄 PDF
+        </button>
+        <button
+          class="source-mode"
+          :class="{ active: inputMode === 'text' }"
+          @click="inputMode = 'text'"
+        >
+          📝 Text
+        </button>
       </div>
 
       <!-- URLs mode -->
@@ -205,7 +204,11 @@ async function addText() {
           Paste one URL per line. Agent-Plug will fetch each page, clean the HTML, and index it so
           the agent can answer from it.
         </p>
-        <textarea v-model="urlsText" rows="4" placeholder="https://example.com/docs&#10;https://example.com/pricing" />
+        <textarea
+          v-model="urlsText"
+          rows="4"
+          placeholder="https://example.com/docs&#10;https://example.com/pricing"
+        />
         <div style="margin-top: 10px">
           <button class="btn" :disabled="busy || !urlsText.trim()" @click="addUrls">
             <span v-if="busy" class="spinner" /> Add & index
@@ -230,8 +233,14 @@ async function addText() {
               Click to choose or drag &amp; drop (up to 5 files, 10MB each)
             </div>
           </div>
-          <input ref="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden @change="onFileChange" />
-          <input ref="replaceInput" type="file" accept=".pdf,application/pdf" hidden @change="onReplaceChange" />
+          <input
+            ref="fileInput"
+            type="file"
+            accept=".pdf,application/pdf"
+            multiple
+            hidden
+            @change="onFileChange"
+          />
         </div>
       </template>
 
@@ -247,7 +256,12 @@ async function addText() {
         </div>
         <div class="form-group">
           <label for="text-content">Content (min 10 characters)</label>
-          <textarea id="text-content" v-model="textContent" rows="8" placeholder="Paste your content here…" />
+          <textarea
+            id="text-content"
+            v-model="textContent"
+            rows="8"
+            placeholder="Paste your content here…"
+          />
         </div>
         <button class="btn" :disabled="busy || textContent.trim().length < 10" @click="addText">
           <span v-if="busy" class="spinner" /> Add text
@@ -255,14 +269,25 @@ async function addText() {
       </template>
 
       <div style="margin-top: 12px">
-        <button class="btn btn-secondary btn-sm" :disabled="agentsStore.sources.length === 0" @click="reindex(false)">
+        <button
+          class="btn btn-secondary btn-sm"
+          :disabled="agentsStore.sources.length === 0"
+          @click="reindex(false)"
+        >
           Re-index all
         </button>
       </div>
     </div>
 
     <div class="card" v-if="agentsStore.sources.length">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px">
+      <div
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 12px;
+        "
+      >
         <h3 style="margin: 0">Sources ({{ agentsStore.sources.length }})</h3>
         <button class="btn btn-ghost btn-sm" :disabled="!hasRunning" @click="load">
           <span v-if="hasRunning" class="spinner" style="margin-right: 4px" /> Refresh
@@ -274,28 +299,45 @@ async function addText() {
           <div class="row-main">
             <div class="row-title">
               <span v-if="s.kind === 'pdf'" class="kind-badge" title="PDF file">📄 PDF</span>
-              <span v-else-if="s.kind === 'text'" class="kind-badge" title="Pasted text">📝 TEXT</span>
+              <span v-else-if="s.kind === 'text'" class="kind-badge" title="Pasted text"
+                >📝 TEXT</span
+              >
               <span v-else class="kind-badge" title="Web page">🌐 URL</span>
-              {{ s.title || (s.kind === 'pdf' ? s.file_name : s.url) }}
+              <a
+                v-if="s.kind === 'pdf'"
+                class="doc-link"
+                :title="'Open ' + (s.file_name || 'document')"
+                @click.prevent="openPdf(s)"
+              >
+                {{ s.title || s.file_name }} ↗
+              </a>
+              <template v-else-if="s.kind === 'text'">{{ s.title || 'Pasted text' }}</template>
+              <a v-else :href="s.url" target="_blank" rel="noopener noreferrer">{{ s.url }}</a>
             </div>
             <div class="row-sub">
-              <span v-if="s.kind === 'pdf'">{{ s.file_name }}<span v-if="s.file_size"> · {{ (s.file_size / 1024).toFixed(0) }} KB</span></span>
-              <span v-else-if="s.kind === 'text'">Pasted text<span v-if="s.chunk_count"> · {{ s.chunk_count }} chunks</span></span>
+              <span v-if="s.kind === 'pdf'"
+                >{{ s.file_name
+                }}<span v-if="s.file_size"> · {{ (s.file_size / 1024).toFixed(0) }} KB</span></span
+              >
+              <span v-else-if="s.kind === 'text'"
+                >Pasted text<span v-if="s.chunk_count"> · {{ s.chunk_count }} chunks</span></span
+              >
               <a v-else :href="s.url" target="_blank" rel="noopener noreferrer">{{ s.url }}</a>
               <span v-if="s.kind !== 'text' && s.chunk_count"> · {{ s.chunk_count }} chunks</span>
             </div>
             <div v-if="s.error" class="row-sub" style="color: var(--danger)">{{ s.error }}</div>
           </div>
           <StatusBadge :status="statusOf(s)" />
-          <button v-if="s.kind === 'pdf'" class="btn btn-ghost btn-sm" :disabled="replacing" @click="startReplace(s.id)">
-            <span v-if="replacing && replacingId === s.id" class="spinner" style="margin-right: 4px" />
-            {{ replacing && replacingId === s.id ? 'Replacing…' : 'Replace' }}
-          </button>
           <button class="btn btn-ghost btn-sm" @click="removeSource(s.id)">Remove</button>
         </div>
       </div>
 
-      <button v-if="agentsStore.sources.some((s) => s.status === 'failed')" class="btn btn-secondary btn-sm" style="margin-top: 12px" @click="reindex(true)">
+      <button
+        v-if="agentsStore.sources.some((s) => s.status === 'failed')"
+        class="btn btn-secondary btn-sm"
+        style="margin-top: 12px"
+        @click="reindex(true)"
+      >
         Retry failed
       </button>
     </div>

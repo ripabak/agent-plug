@@ -404,6 +404,41 @@ textarea {
   font-size: 22px;
   margin-bottom: 10px;
 }
+img.agent-avatar {
+  object-fit: cover;
+  background: #4f46e522;
+}
+
+.avatar-templates {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+  gap: 8px;
+  margin-top: 6px;
+}
+.avatar-template {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, border-color 0.12s ease;
+}
+.avatar-template:hover {
+  transform: scale(1.08);
+  border-color: var(--accent, #4f46e5);
+}
+.avatar-template:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.avatar-template img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
 
 .agent-card h3 {
   margin: 0 0 4px;
@@ -448,6 +483,17 @@ textarea {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.row .row-title a.doc-link {
+  cursor: pointer;
+  color: var(--accent, #4f46e5);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.row .row-title a.doc-link:hover {
+  text-decoration-thickness: 2px;
 }
 
 .row .row-sub {
@@ -920,12 +966,20 @@ code,
   margin: 0.5em 0 0.25em;
 }
 
-.markdown-content h1 { font-size: 1.2em; }
-.markdown-content h2 { font-size: 1.1em; }
-.markdown-content h3 { font-size: 1.02em; }
+.markdown-content h1 {
+  font-size: 1.2em;
+}
+.markdown-content h2 {
+  font-size: 1.1em;
+}
+.markdown-content h3 {
+  font-size: 1.02em;
+}
 .markdown-content h4,
 .markdown-content h5,
-.markdown-content h6 { font-size: 1em; }
+.markdown-content h6 {
+  font-size: 1em;
+}
 
 .markdown-content table {
   border-collapse: collapse;
@@ -965,10 +1019,6 @@ code,
   max-width: 100%;
   border-radius: 8px;
 }
-
-
-
-
 
 /* ---------- usage tab (charts + history) ---------- */
 .usage-summary {

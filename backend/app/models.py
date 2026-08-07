@@ -1,5 +1,6 @@
 """SQLAlchemy ORM models for Agent-Plug."""
 import datetime
+
 from sqlalchemy import (
     Boolean,
     DateTime,
@@ -11,9 +12,11 @@ from sqlalchemy import (
     UniqueConstraint,
     func,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
+from .config import BACKEND_PUBLIC_URL
 
 
 class User(Base):
@@ -56,6 +59,30 @@ class Agent(Base):
     welcome_message: Mapped[str] = mapped_column(String, default="Hi! How can I help you?")
     theme_color: Mapped[str] = mapped_column(String, default="#4f46e5")
     avatar_emoji: Mapped[str] = mapped_column(String, default="🤖")
+    # Storage key of the compressed avatar image (avatars/{agent_id}.webp);
+    # None = fall back to avatar_emoji.
+    avatar_path: Mapped[str | None] = mapped_column(String, nullable=True)
+    # How the avatar renders in the widget: 'template' (animated GIF/emoji —
+    # drawn on the header-colored circle, like the emoji avatar) or 'photo'
+    # (uploaded logo — floats without a background color).
+    avatar_kind: Mapped[str] = mapped_column(String, default="photo", nullable=False)
+
+    @property
+    def avatar_url(self) -> str | None:
+        """Public URL for the avatar image (None if no photo uploaded).
+
+        The storage key is stable (avatars/{agent_id}.webp) and the endpoint
+        is browser-cacheable, so the URL is versioned with `?v=` (updated_at,
+        microsecond precision) — replacing the photo busts the cache instead
+        of showing the previous avatar.
+        """
+        if not self.avatar_path:
+            return None
+        version = self.updated_at.strftime("%Y%m%d%H%M%S%f") if self.updated_at else "0"
+        return (
+            f"{BACKEND_PUBLIC_URL.rstrip('/')}/api/public/agents/{self.id}/avatar"
+            f"?v={version}"
+        )
     # Chat display config, set from the dashboard preview and consumed by the
     # live widget: chat_theme is a JSON string {preset, custom, touched}
     # matching the frontend ChatThemeState; show_thinking/show_tools are the
@@ -103,6 +130,9 @@ class Source(Base):
     title: Mapped[str | None] = mapped_column(String, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)
+    # Chunk ids in the agent's pgvector collection (langchain_pg_embedding),
+    # persisted so source deletions stay correct across restarts.
+    chunk_ids: Mapped[list[str] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=func.now()
     )

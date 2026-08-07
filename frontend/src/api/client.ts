@@ -75,6 +75,29 @@ export const api = {
     request<void>(`/api/agents/${id}`, { method: 'DELETE', token }),
   regenerateToken: (token: string, id: number) =>
     request<Agent>(`/api/agents/${id}/regenerate-token`, { method: 'POST', token }),
+  uploadAgentAvatar: async (token: string, id: number, file: File, kind: 'photo' | 'template' = 'photo') => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('kind', kind)
+    const res = await fetch(`${API_BASE}/api/agents/${id}/avatar`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    })
+    if (!res.ok) {
+      let message = `Upload failed (${res.status})`
+      try {
+        const data = await res.json()
+        if (typeof data.detail === 'string') message = data.detail
+      } catch {
+        /* keep default */
+      }
+      throw new ApiError(res.status, message)
+    }
+    return (await res.json()) as Agent
+  },
+  deleteAgentAvatar: (token: string, id: number) =>
+    request<Agent>(`/api/agents/${id}/avatar`, { method: 'DELETE', token }),
   getEmbed: (token: string, id: number) =>
     request<EmbedResponse>(`/api/agents/${id}/embed`, { token }),
 
@@ -107,16 +130,12 @@ export const api = {
   },
   deleteSource: (token: string, agentId: number, sourceId: number) =>
     request<void>(`/api/agents/${agentId}/sources/${sourceId}`, { method: 'DELETE', token }),
-  replaceSourceFile: async (token: string, agentId: number, sourceId: number, file: File) => {
-    const form = new FormData()
-    form.append('file', file)
+  getSourceFile: async (token: string, agentId: number, sourceId: number) => {
     const res = await fetch(`${API_BASE}/api/agents/${agentId}/sources/${sourceId}/file`, {
-      method: 'PUT',
       headers: { Authorization: `Bearer ${token}` },
-      body: form,
     })
     if (!res.ok) {
-      let message = `Replace failed (${res.status})`
+      let message = `Failed to load file (${res.status})`
       try {
         const data = await res.json()
         if (typeof data.detail === 'string') message = data.detail
@@ -125,7 +144,7 @@ export const api = {
       }
       throw new ApiError(res.status, message)
     }
-    return (await res.json()) as Source
+    return await res.blob()
   },
   reindexSources: (token: string, agentId: number, onlyFailed = false) =>
     request<{ scheduled: number }>(`/api/agents/${agentId}/sources/reindex`, {

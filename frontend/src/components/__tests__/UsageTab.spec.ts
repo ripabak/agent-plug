@@ -23,13 +23,14 @@ vi.mock('vue-chartjs', () => ({
 
 vi.mock('@/api/client', () => ({
   api: {
-    getUsage: vi.fn<
-      (
-        token: string,
-        agentId: number,
-        params?: { days?: number; page?: number; pageSize?: number },
-      ) => Promise<UsageResponse>
-    >(),
+    getUsage:
+      vi.fn<
+        (
+          token: string,
+          agentId: number,
+          params?: { days?: number; page?: number; pageSize?: number },
+        ) => Promise<UsageResponse>
+      >(),
   },
   ApiError: class ApiError extends Error {},
   API_BASE: 'http://localhost:8000',
@@ -45,6 +46,8 @@ const AGENT: Agent = {
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',
+  avatar_url: null,
+  avatar_kind: 'photo',
   chat_theme: '',
   show_thinking: true,
   show_tools: true,
@@ -251,9 +254,7 @@ describe('UsageTab.vue', () => {
           total_input_tokens: 0,
           total_output_tokens: 0,
           total_tokens: 0,
-          series: [
-            { date: '2026-07-06', requests: 0, input_tokens: 0, output_tokens: 0 },
-          ],
+          series: [{ date: '2026-07-06', requests: 0, input_tokens: 0, output_tokens: 0 }],
           countries: [],
         },
         items: [],

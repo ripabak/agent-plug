@@ -51,7 +51,7 @@ async def test_local_storage_roundtrip(tmp_path):
     assert (tmp_path / "a" / "b.txt").read_bytes() == b"hello"
     assert await s.get("a/b.txt") == b"hello"
 
-    await s.replace("a/b.txt", b"world")
+    await s.put("a/b.txt", b"world")  # overwrite (same key)
     assert await s.get("a/b.txt") == b"world"
 
     await s.delete("a/b.txt")
@@ -78,7 +78,7 @@ async def test_s3_storage_roundtrip():
     assert await s.get("doc/1.pdf") == b"pdf-bytes"
     assert await s.exists("doc/1.pdf")
 
-    await s.replace("doc/1.pdf", b"new-bytes")
+    await s.put("doc/1.pdf", b"new-bytes")  # overwrite (same key)
     assert await s.get("doc/1.pdf") == b"new-bytes"
 
     await s.delete("doc/1.pdf")

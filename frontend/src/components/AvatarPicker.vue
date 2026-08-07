@@ -1,13 +1,31 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = defineProps<{ modelValue: string }>()
+const props = defineProps<{ modelValue: string; disabled?: boolean }>()
 const emit = defineEmits<{ 'update:modelValue': [value: string] }>()
 
 /** Preset avatar emojis offered by the picker (default 🤖 first). */
 const AVATAR_EMOJIS = [
-  '🤖', '🦾', '🧠', '💬', '🚀', '✨', '🎯', '🔧', '📚', '🧩',
-  '🎨', '⚡', '🦉', '🐙', '🌟', '🤝', '🐱', '🐶', '🦄', '🌍',
+  '🤖',
+  '🦾',
+  '🧠',
+  '💬',
+  '🚀',
+  '✨',
+  '🎯',
+  '🔧',
+  '📚',
+  '🧩',
+  '🎨',
+  '⚡',
+  '🦉',
+  '🐙',
+  '🌟',
+  '🤝',
+  '🐱',
+  '🐶',
+  '🦄',
+  '🌍',
 ]
 
 /** Keep a legacy custom emoji (from the old free-text input) visible and
@@ -24,8 +42,9 @@ const options = computed(() =>
       :key="emoji"
       type="button"
       class="avatar-option"
-      :class="{ active: modelValue === emoji }"
+      :class="{ active: modelValue === emoji, disabled }"
       :title="emoji"
+      :disabled="disabled"
       @click="emit('update:modelValue', emoji)"
     >
       {{ emoji }}

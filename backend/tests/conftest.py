@@ -9,6 +9,8 @@ os.environ["AP_TESTING"] = "1"
 os.environ["DATABASE_URL"] = "postgresql+asyncpg://postgres:ripa@localhost:5432/agent-plug-test"
 os.environ["SECRET_KEY"] = "test-secret-key"
 os.environ["CORS_ORIGINS"] = "http://localhost:5173"
+os.environ["STORAGE_BACKEND"] = "local"  # hermetic: tests never touch S3
+os.environ["OPENROUTER_API_KEY"] = ""  # hermetic: no real API calls
 os.environ["OPENROUTER_EMBEDDING_MODEL"] = "test/embedding-model"
 os.environ["OPENROUTER_BASE_URL"] = "https://example.invalid/v1"
 os.environ["BACKEND_PUBLIC_URL"] = "http://localhost:8000"
@@ -18,6 +20,8 @@ import asyncio  # noqa: E402
 import shutil  # noqa: E402
 
 import pytest  # noqa: E402
+
+from sqlalchemy import text  # noqa: E402
 
 from app.config import UPLOAD_DIR  # noqa: E402
 from app.database import Base, engine, init_db  # noqa: E402
@@ -46,6 +50,24 @@ def test_database():
     except Exception:
         pass  # first run on a fresh DB — nothing to drop
     asyncio.run(init_db())
+    yield
+
+
+@pytest.fixture(autouse=True)
+def clean_vector_tables():
+    """Drop the langchain pgvector tables before each test.
+
+    Collections are recreated lazily on first use, so dropping them keeps
+    tests isolated: several suites use fixed small agent ids (1, 2) that
+    would otherwise collide with leftover rows from an earlier test.
+    """
+    async def _inner() -> None:
+        async with engine.begin() as conn:
+            await conn.execute(
+                text("DROP TABLE IF EXISTS langchain_pg_embedding, langchain_pg_collection CASCADE")
+            )
+
+    asyncio.run(_inner())
     yield
 
 

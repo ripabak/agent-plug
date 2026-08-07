@@ -42,7 +42,13 @@ async function submit() {
         </div>
         <div class="form-group">
           <label for="password">Password</label>
-          <input id="password" v-model="password" type="password" autocomplete="current-password" required />
+          <input
+            id="password"
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
         </div>
         <button class="btn btn-block" type="submit" :disabled="busy">
           <span v-if="busy" class="spinner" /> Log in

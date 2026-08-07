@@ -41,13 +41,25 @@ function logout() {
     <div v-if="error" class="error-box">{{ error }}</div>
 
     <div class="agent-grid">
-      <RouterLink v-for="a in agentsStore.agents" :key="a.id" :to="`/agents/${a.id}?tab=knowledge`" class="card agent-card">
-        <span class="agent-avatar" :style="{ background: a.theme_color + '22' }">{{ a.avatar_emoji }}</span>
+      <RouterLink
+        v-for="a in agentsStore.agents"
+        :key="a.id"
+        :to="`/agents/${a.id}?tab=knowledge`"
+        class="card agent-card"
+      >
+        <img v-if="a.avatar_url" :src="a.avatar_url" class="agent-avatar" alt="" />
+        <span v-else class="agent-avatar" :style="{ background: a.theme_color + '22' }">{{
+          a.avatar_emoji
+        }}</span>
         <h3>{{ a.name }}</h3>
         <p>{{ a.description || 'No description' }}</p>
       </RouterLink>
 
-      <RouterLink to="/agents/new" class="card agent-card" style="border-style: dashed; text-align: center">
+      <RouterLink
+        to="/agents/new"
+        class="card agent-card"
+        style="border-style: dashed; text-align: center"
+      >
         <span class="agent-avatar" style="background: var(--bg); font-size: 26px">＋</span>
         <h3>New Agent</h3>
         <p>Create your first AI agent</p>

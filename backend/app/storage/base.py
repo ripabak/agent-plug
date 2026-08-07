@@ -29,7 +29,3 @@ class Storage(Protocol):
     async def exists(self, key: str) -> bool:
         """True if the object exists."""
         ...
-
-    async def replace(self, key: str, data: bytes, content_type: str | None = None) -> None:
-        """Overwrite an existing object in place (keeps the same key/URL)."""
-        ...

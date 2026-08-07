@@ -21,7 +21,11 @@ describe('ColorPreview', () => {
   })
 
   it('renders the AI bubble mockup with its own tokens', () => {
-    const theme = themeWith({ aiBubbleBg: '#f0f0f0', aiBubbleText: '#101010', aiBubbleBorder: '#dddddd' })
+    const theme = themeWith({
+      aiBubbleBg: '#f0f0f0',
+      aiBubbleText: '#101010',
+      aiBubbleBorder: '#dddddd',
+    })
     const wrapper = mount(ColorPreview, { props: { kind: 'aiBubble', theme } })
     const bubble = wrapper.find('.cvp-bubble')
     expect(bubble.classes()).toContain('cvp-left')
@@ -44,7 +48,9 @@ describe('ColorPreview', () => {
     const send = wrapper.find('.cvp-send')
     expect(send.attributes('style')).toContain('background: rgb(5, 150, 105)')
     expect(send.text()).toBe('Send')
-    expect(wrapper.find('.cvp-input').attributes('style')).toContain('background: rgb(255, 255, 255)')
+    expect(wrapper.find('.cvp-input').attributes('style')).toContain(
+      'background: rgb(255, 255, 255)',
+    )
   })
 
   it('renders the thinking and tools mockups with their tokens', () => {
@@ -52,7 +58,11 @@ describe('ColorPreview', () => {
     const tw = mount(ColorPreview, { props: { kind: 'thinking', theme: thinking } })
     expect(tw.find('.cvp-think').attributes('style')).toContain('background: rgb(246, 247, 249)')
 
-    const tools = themeWith({ aiBubbleBg: '#ffffff', toolSuccessBg: '#f0fdf4', toolErrorBg: '#fef2f2' })
+    const tools = themeWith({
+      aiBubbleBg: '#ffffff',
+      toolSuccessBg: '#f0fdf4',
+      toolErrorBg: '#fef2f2',
+    })
     const ow = mount(ColorPreview, { props: { kind: 'tools', theme: tools } })
     // the tools bubble follows the AI bubble colors
     expect(ow.find('.cvp-tools').attributes('style')).toContain('background: rgb(255, 255, 255)')
