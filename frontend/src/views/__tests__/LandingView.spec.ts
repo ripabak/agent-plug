@@ -21,29 +21,42 @@ function mountLanding() {
 describe('LandingView', () => {
   it('renders the hero value proposition', () => {
     const wrapper = mountLanding()
-    expect(wrapper.find('h1').text()).toContain('Plug in a friendly helper')
+    expect(wrapper.find('h1').text()).toContain('Install a friendly agent')
     expect(wrapper.find('.lp-hero-cta').text()).toContain('Start free')
-    expect(wrapper.text()).toContain('Friendly answers for your visitors')
+    expect(wrapper.text()).toContain('Effortless answers for your visitors')
   })
 
-  it('tells the scroll story: problem stats, solution, tour, FAQ, CTA', () => {
+  it('tells the scroll story: problem stats, solution, usage, tour, FAQ, CTA', () => {
     const wrapper = mountLanding()
     const text = wrapper.text()
     expect(text).toContain('70%')
     expect(text).toContain('Baymard Institute')
-    expect(text).toContain('A helper that already knows your business')
+    expect(text).toContain('Curious visitors leave too soon')
+    expect(text).toContain('An agent that already knows your business')
+    expect(text).toContain('Know who\u2019s asking, and from where')
     expect(text).toContain('Live on your website in minutes')
     expect(text).toContain('Questions, answered.')
-    expect(text).toContain('Make your website friendlier, today.')
+    expect(text).toContain("Visitors stay. Questions don't.")
   })
 
-  it('renders all five tour steps with their screens', () => {
+  it('renders all six tour steps with their screens', () => {
     const wrapper = mountLanding()
     const verbs = wrapper.findAll('.lp-step-verb').map((v) => v.text().trim())
-    expect(verbs).toEqual(['Create', 'Teach', 'Style', 'Publish', 'Done'])
-    // each step mounts its screen (create / knowledge / theme / embed / live)
-    expect(wrapper.findAll('.lp-win').length).toBe(4)
+    expect(verbs).toEqual(['Create', 'Teach', 'Style', 'Install', 'Done', 'Track'])
+    // each step mounts its screen (create / knowledge / theme / embed / live / usage)
+    expect(wrapper.findAll('.lp-win').length).toBe(5)
     expect(wrapper.find('.lp-browser').exists()).toBe(true)
+  })
+
+  it('closes the tour with the usage analytics step (dashboard mockup)', () => {
+    const wrapper = mountLanding()
+    const steps = wrapper.findAll('.lp-step')
+    const last = steps[steps.length - 1]!
+    expect(last.text()).toContain('Track')
+    expect(last.text()).toContain('Know who\u2019s asking, and from where')
+    expect(last.find('.lp-usage-win').exists()).toBe(true)
+    expect(last.text()).toContain('Indonesia')
+    expect(last.text()).toContain('United States')
   })
 
   it('renders every FAQ answer', () => {

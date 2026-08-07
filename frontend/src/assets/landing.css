@@ -410,6 +410,11 @@ html {
   max-width: 720px;
 }
 
+/* --------------------------------------------------------------- problem */
+.lp-problem-head {
+  max-width: 720px;
+}
+
 .lp-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -452,6 +457,127 @@ html {
   line-height: 1.7;
   color: var(--lp-muted);
   max-width: 640px;
+}
+
+/* ------------------------------------------------------------- usage ad */
+.lp-usage-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: 56px;
+  align-items: center;
+}
+
+.lp-usage-screen {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+/* usage dashboard mock (mirrors the dashboard Usage tab) */
+.lp-usage-win .lp-win-body {
+  padding: 20px 22px;
+}
+
+.lp-usage-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  border: 1px solid var(--lp-border);
+  border-radius: var(--lp-r-sm);
+  padding: 14px 16px;
+}
+
+.lp-usage-stat-num {
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-usage-stat-label {
+  font-size: 11px;
+  color: var(--lp-muted);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.lp-usage-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 84px;
+  margin-top: 18px;
+  padding-top: 8px;
+  border-top: 1px solid var(--lp-border);
+}
+
+.lp-usage-bar {
+  flex: 1;
+  min-height: 3px;
+  border-radius: 2px 2px 0 0;
+  background: var(--lp-accent-soft);
+}
+
+.lp-usage-bar:nth-child(3n + 1) {
+  background: var(--lp-accent);
+}
+
+.lp-usage-sub {
+  margin: 18px 0 8px;
+  font-family: var(--lp-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lp-muted);
+}
+
+.lp-usage-countries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--lp-border);
+}
+
+.lp-usage-country {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) minmax(70px, 140px) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 2px;
+  border-bottom: 1px solid var(--lp-border);
+}
+
+.lp-usage-flag {
+  font-size: 15px;
+  line-height: 1;
+}
+
+.lp-usage-cname {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.lp-usage-cbar {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--lp-border);
+  overflow: hidden;
+}
+
+.lp-usage-cfill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--lp-ink);
+}
+
+.lp-usage-cnum {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
 }
 
 /* -------------------------------------------------------------- solution */
@@ -1584,6 +1710,11 @@ html {
 
   .lp-stat {
     border-top: 1px solid var(--lp-border-strong);
+  }
+
+  .lp-usage-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 40px;
   }
 
   .lp-hero-cta .lp-btn {

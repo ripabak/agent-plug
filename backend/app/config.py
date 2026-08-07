@@ -68,6 +68,10 @@ UPLOAD_MAX_SIZE = int(os.getenv("UPLOAD_MAX_SIZE", 10 * 1024 * 1024))  # 10 MB p
 # additions finish slower but never spike server/embedding load.
 INDEX_CONCURRENCY = int(os.getenv("INDEX_CONCURRENCY", 3))
 
+# read_current_page tool: max chars of page text passed to the model per call
+# (the rest is truncated — pages stay queryable via the knowledge base).
+PAGE_CONTEXT_MAX_CHARS = int(os.getenv("PAGE_CONTEXT_MAX_CHARS", 10000))
+
 # --- Agent avatar (photo/logo upload) ---
 # Raw upload is validated on both FE and BE; the file is then compressed to
 # WebP (max AVATAR_MAX_DIM edge, AVATAR_QUALITY) with Pillow before storage.

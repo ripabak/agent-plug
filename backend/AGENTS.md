@@ -72,7 +72,11 @@ uv run pyright main.py app/ tests/        # type-check — must be 0 errors befo
 ke `postgresql+psycopg://` — override via env jika perlu), `SECRET_KEY`, `CORS_ORIGINS`, `OPENROUTER_API_KEY`,
 `OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`, `OPENROUTER_EMBEDDING_MODEL`,
 `BACKEND_PUBLIC_URL`, `UPLOAD_DIR` (default `uploads/`), `UPLOAD_MAX_FILES=5`,
-`UPLOAD_MAX_SIZE=10MB`. Storage: `STORAGE_BACKEND` (`local`|`s3`),
+`UPLOAD_MAX_SIZE=10MB`, `INDEX_CONCURRENCY=3` (max sources indexed
+concurrently server-wide; extra sources queue with status `pending` =
+"Queued" in the dashboard — add endpoints return immediately via
+`BackgroundTasks` and the 3s frontend poll tracks progress),
+`PAGE_CONTEXT_MAX_CHARS=10000` (read_current_page tool truncation). Storage: `STORAGE_BACKEND` (`local`|`s3`),
 `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`,
 `S3_PREFIX`, `S3_REGION` (lihat `app/storage/`). Tests set `AP_TESTING=1` + a
 `agent-plug-test` DB (see `tests/conftest.py`). Create both DBs:
@@ -138,6 +142,21 @@ ke `postgresql+psycopg://` — override via env jika perlu), `SECRET_KEY`, `CORS
   outputs via `parse_source_markers`), `tool_start`, `tool_end`,
   `tool_progress`. Reasoning + tool events are ALWAYS streamed — show/hide is
   client-only. Keep-alive `: keepalive` every 30s.
+- **Web-context tools (page fetching)**: two on-demand tools built on the
+  existing `rag/fetcher.fetch_page`:
+  - `read_current_page` (NO args): the widget sends `page_url` (default
+    `window.location.href`; override via `data-page-url` attr; `"off"`
+    disables) in every run.start input → stored on `AgentThread.page_url`.
+    The URL comes from the thread the run executes on, never from the model.
+  - `fetch_web_page(url)`: the MODEL chooses the URL (visitor asks about a
+    page not in the KB). Input normalized (`https://` default for bare hosts)
+    and rejected if not http(s).
+  Both are SSRF-guarded (`_is_blocked_host`: private/loopback/link-local/
+  reserved IPs refused — model-chosen URLs are untrusted), TTL-cached per URL
+  (120s), truncated to `PAGE_CONTEXT_MAX_CHARS`, and their output uses a
+  `[Source: …]` marker so the widget renders a citation chip. Tool-call caps
+  (ToolCallLimitMiddleware, 5/run) bound abuse. Static pages only —
+  JS-rendered SPAs return the HTML shell.
 - **Widget parity**: the dashboard preview REUSES the real
   `app/widget/widget.js` (embedded via `PreviewTab.vue`, floating + auto-open
   on desktop through `data-auto-open`; live updates via the

@@ -109,6 +109,7 @@ async def handle_command(
             messages=[m.model_dump() for m in input_data.messages],
             user_id=None,
             client_ip=request_client_ip(request),
+            page_url=input_data.page_url,
         )
         return CommandResponse(type="success", id=cmd_id, result={"run_id": run_id})
 

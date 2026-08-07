@@ -70,6 +70,8 @@ services:
       # Max sources indexed concurrently (server-wide); the rest queue with
       # status "Queued" in the dashboard.
       INDEX_CONCURRENCY: ${INDEX_CONCURRENCY:-3}
+      # read_current_page tool: max chars of page text passed to the model.
+      PAGE_CONTEXT_MAX_CHARS: ${PAGE_CONTEXT_MAX_CHARS:-10000}
       # Storage for uploaded PDFs/avatars: local (volume `uploads`) atau S3
       # EKSTERNAL (isi S3_ENDPOINT_URL dkk di .env — SeaweedFS/MinIO/AWS S3).
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}

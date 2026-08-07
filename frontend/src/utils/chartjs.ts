@@ -10,9 +10,12 @@ import {
   type ChartOptions,
 } from 'chart.js'
 
-// Concrete colors — the canvas can't resolve CSS variables.
-export const PRIMARY = '#4f46e5'
-export const OUTPUT = '#10b981'
+// Concrete colors — the canvas can't resolve CSS variables. These mirror the
+// dashboard design tokens (assets/main.css): ink = --primary, clay = --accent.
+// (No indigo/emerald — those came from an old preset and clashed with the
+// warm monochrome palette.)
+export const PRIMARY = '#211f1b'
+export const OUTPUT = '#a9502a'
 
 /** Register the tree-shaken Chart.js pieces (idempotent, safe to call often). */
 export function registerChartjs() {
@@ -49,7 +52,7 @@ function barDataset(label: string, data: number[], color: string) {
   }
 }
 
-/** Requests per day — single indigo dataset. */
+/** Requests per day — single ink dataset. */
 export function requestChartData(series: UsageSeriesPoint[]): ChartData<'bar'> {
   return {
     labels: series.map((p) => shortDate(p.date)),

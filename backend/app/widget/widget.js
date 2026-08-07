@@ -6,6 +6,10 @@
  *   data-agent-id    : agent identifier
  *   data-token       : public token (authentication for widget endpoints)
  *   data-base-url    : backend base URL (defaults to script origin)
+ *   data-page-url    : current-page context. Default = window.location.href
+ *                      (the agent can read this page via read_current_page).
+ *                      Set to a URL to override (SPA routes), or "off" to
+ *                      disable sending page context entirely.
  *
  * Optional theming attributes (all of them; defaults keep the legacy look):
  *   data-theme-name  : preset palette name (indigo|emerald|rose|amber|slate|ocean)
@@ -719,9 +723,20 @@
     assistantEl = beginAssistantMessage();
     if (assistantEl) assistantEl.innerHTML = '<span class="' + uid + '-thinking">…</span>';
 
+    // Current-page context: default to the page the widget is embedded on.
+    // data-page-url="off" (or empty) disables it; a URL value overrides it
+    // (e.g. when the widget lives on a JS-rendered SPA whose real content URL
+    // differs from window.location). Sent on every message so SPA navigation
+    // stays current; the backend stores it on the thread and the agent's
+    // read_current_page tool uses it only when the visitor asks.
+    var runInput = { thread_id: threadId, messages: [{ role: 'user', content: text }] };
+    var pageUrlAttr = script.getAttribute('data-page-url');
+    if (pageUrlAttr === null) runInput.page_url = window.location.href;
+    else if (pageUrlAttr !== 'off' && pageUrlAttr !== '') runInput.page_url = pageUrlAttr;
+
     apiFetch('/api/public/agents/' + agentId + '/commands', {
       method: 'POST',
-      body: { method: 'run.start', id: genId(), params: { input: { thread_id: threadId, messages: [{ role: 'user', content: text }] } } },
+      body: { method: 'run.start', id: genId(), params: { input: runInput } },
     })
       .then(function (r) { return r.json(); })
       .then(function (res) {

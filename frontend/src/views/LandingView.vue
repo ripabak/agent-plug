@@ -3,7 +3,7 @@
  * LandingView — the public marketing page for Agent-Plug.
  *
  * Narrative (scroll story): the problem (curious visitors leave too soon) →
- * statistics → the fix (a helper that already knows your business) → a
+ * statistics → the fix (an agent that already knows your business) → a
  * five-screen tour of the real dashboard (create, teach, style, publish,
  * done) → FAQ → CTA.
  *
@@ -11,8 +11,8 @@
  * (staying longer, understanding the business), never about the stack.
  *
  * Aesthetic: warm monochrome editorial (minimalist-ui protocol). Brand mark:
- * the "plug" (brandkit): chat bubble + socket slots = "plug a friendly
- * helper into your website". All motion is IntersectionObserver-driven;
+ * the "plug" (brandkit): chat bubble + socket slots = "add a friendly agent
+ * to your website". All motion is IntersectionObserver-driven;
  * prefers-reduced-motion degrades to static.
  */
 import { computed, onMounted, ref } from 'vue'
@@ -23,6 +23,7 @@ import '@/assets/landing.css'
 import PlugMark from '@/components/PlugMark.vue'
 import WidgetMock from '@/components/landing/WidgetMock.vue'
 import LandingFaq from '@/components/landing/LandingFaq.vue'
+import ScreenUsage from '@/components/landing/steps/ScreenUsage.vue'
 import ScreenCreate from '@/components/landing/steps/ScreenCreate.vue'
 import ScreenKnowledge from '@/components/landing/steps/ScreenKnowledge.vue'
 import ScreenTheme from '@/components/landing/steps/ScreenTheme.vue'
@@ -33,13 +34,16 @@ import { useReveal } from '@/composables/useReveal'
 const auth = useAuthStore()
 const authed = computed(() => auth.isAuthenticated)
 
+/** Marketing slogan — shown in the footer + closing CTA. Swap here to test. */
+const SLOGAN = "Visitors stay. Questions don't."
+
 const rootEl = ref<HTMLElement | null>(null)
 useReveal(() => rootEl.value)
 
 const steps = [
   {
     verb: 'Create',
-    title: 'Give your helper a name.',
+    title: 'Give your agent a name.',
     body: 'A name, a short greeting, a friendly face. It quickly starts to feel like part of your team.',
     time: '≈ 30 seconds',
     screen: ScreenCreate,
@@ -59,9 +63,9 @@ const steps = [
     screen: ScreenTheme,
   },
   {
-    verb: 'Publish',
-    title: 'Paste one line into your site.',
-    body: 'One small line of code, as easy as adding a video. The helper appears in the corner of your page.',
+    verb: 'Install',
+    title: 'Install it on your site.',
+    body: 'One line, as easy as adding a video. Your agent appears in the corner of your page, ready for visitors.',
     time: '≈ 10 seconds',
     screen: ScreenEmbed,
   },
@@ -71,6 +75,13 @@ const steps = [
     body: 'Anyone on your page can ask a question and get a clear answer with the source. No waiting, no phone call.',
     time: 'Instant',
     screen: ScreenLive,
+  },
+  {
+    verb: 'Track',
+    title: 'Know who\u2019s asking, and from where.',
+    body: 'Every conversation is counted — how much your agent is used each day and where your visitors come from. All from your dashboard.',
+    time: 'Live',
+    screen: ScreenUsage,
   },
 ]
 
@@ -93,11 +104,11 @@ const stats = [
 ]
 
 onMounted(() => {
-  document.title = 'Agent-Plug - Friendly answers for your website visitors'
+  document.title = 'Agent-Plug — Effortless answers for your website visitors'
   const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]')
   if (meta)
     meta.content =
-      'Plug a friendly helper into your website. Visitors get instant answers about your business, from your own pages. Set up in minutes.'
+      'Install a friendly agent on your website. Visitors get instant, plain-language answers from your own pages — and stay. Set up in minutes.'
 })
 </script>
 
@@ -138,13 +149,13 @@ onMounted(() => {
         <div class="lp-wrap">
           <div class="lp-hero-grid">
             <div class="lp-hero-copy lp-reveal">
-              <p class="lp-eyebrow">Friendly answers for your visitors</p>
+              <p class="lp-eyebrow">Effortless answers for your visitors</p>
               <h1 id="lp-hero-title" class="lp-display lp-h1">
-                Plug in a <em class="lp-em">friendly helper</em>.
+                Install a <em class="lp-em">friendly agent</em> on your website.
               </h1>
               <p class="lp-hero-sub">
-                When visitors have questions, a helper answers right away, in plain words, from what
-                you already wrote about your business.
+                It reads your pages once, then answers in plain words — so questions get answered
+                on the spot, and visitors stay.
               </p>
               <div class="lp-hero-cta">
                 <RouterLink class="lp-btn lp-btn-ink lp-btn-lg" to="/register"
@@ -194,7 +205,7 @@ onMounted(() => {
         <div class="lp-solution-grid">
           <div class="lp-reveal">
             <h2 id="lp-solution-title" class="lp-display lp-h2">
-              A helper that already knows your business.
+              An agent that already knows your business.
             </h2>
             <p class="lp-body">
               Give it your website, your documents, your notes. It reads them once, then answers
@@ -271,7 +282,7 @@ onMounted(() => {
               <p class="lp-eyebrow">How it works</p>
               <h2 id="lp-tour-title" class="lp-display lp-h2">Live on your website in minutes.</h2>
               <p class="lp-body lp-tour-summary">
-                Five short steps, no manual needed. Here is the whole flow.
+                Six short steps, no manual needed. Here is the whole flow.
               </p>
             </div>
             <div class="lp-tour-meta lp-mono-meta lp-reveal">
@@ -284,7 +295,7 @@ onMounted(() => {
                   stroke-linecap="round"
                 />
               </svg>
-              ≈ 2 min total · 5 steps
+              ≈ 2 min setup · 6 steps
             </div>
           </div>
         </div>
@@ -347,9 +358,9 @@ onMounted(() => {
       <section class="lp-section lp-cta" aria-labelledby="lp-cta-title">
         <div class="lp-ambient" aria-hidden="true" />
         <div class="lp-cta-inner lp-wrap lp-reveal">
-          <h2 id="lp-cta-title" class="lp-display lp-h2">Make your website friendlier, today.</h2>
+          <h2 id="lp-cta-title" class="lp-display lp-h2">{{ SLOGAN }}</h2>
           <p class="lp-cta-sub">
-            Create a free account and plug in your first helper. It takes about two minutes.
+            Create a free account and install your first agent. It takes about two minutes.
           </p>
           <div class="lp-cta-actions">
             <RouterLink class="lp-btn lp-btn-ink lp-btn-lg" to="/register">Start free</RouterLink>
@@ -383,7 +394,7 @@ onMounted(() => {
               <PlugMark :size="22" :decorative="false" />
               <span>Agent-Plug</span>
             </RouterLink>
-            <p class="lp-footer-tag">Friendly answers for every visitor.</p>
+            <p class="lp-footer-tag">{{ SLOGAN }}</p>
           </div>
           <div>
             <p class="lp-footer-col-title">Product</p>
@@ -408,7 +419,7 @@ onMounted(() => {
         </div>
         <div class="lp-footer-bottom">
           <span>© 2025 Agent-Plug</span>
-          <span>Friendly answers for every visitor.</span>
+          <span>{{ SLOGAN }}</span>
         </div>
       </div>
     </footer>

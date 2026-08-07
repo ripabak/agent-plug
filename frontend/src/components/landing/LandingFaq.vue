@@ -14,12 +14,12 @@ interface FaqItem {
 
 const items: FaqItem[] = [
   {
-    q: 'What does my helper know?',
+    q: 'What does my agent know?',
     a: 'Only what you teach it: your website pages, documents, or notes. It answers from those, and shows the page it used.',
   },
   {
     q: 'Do I need to know how to code?',
-    a: 'No. One line of HTML, as easy as pasting a video into your site. Everything else is done with clicks.',
+    a: 'No. One line of code, as easy as pasting a video into your site. Everything else is done with clicks.',
   },
   {
     q: 'Does this replace my customer service team?',
@@ -35,11 +35,11 @@ const items: FaqItem[] = [
   },
   {
     q: 'Is my information safe?',
-    a: 'Your materials stay in your own database. Each helper works only with what you gave it, and nothing is shared with other users.',
+    a: 'Your materials stay in your own database. Each agent works only with what you gave it, and nothing is shared with other users.',
   },
   {
     q: 'How long does setup take?',
-    a: 'About two minutes: create, teach, publish. No credit card to start.',
+    a: 'About two minutes: create, teach, install. No credit card to start.',
   },
 ]
 

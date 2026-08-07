@@ -25,7 +25,7 @@ from ..config import (
     OPENROUTER_MODEL,
 )
 from ..models import Agent
-from .tools import create_rag_tool
+from .tools import create_fetch_web_tool, create_page_tool, create_rag_tool
 
 
 def _build_model(model_id: str) -> ChatOpenRouter:
@@ -115,7 +115,7 @@ async def build_agent(
 
     return create_agent(
         model=model,
-        tools=[create_rag_tool(agent.id)],
+        tools=[create_rag_tool(agent.id), create_page_tool(agent.id), create_fetch_web_tool()],
         system_prompt=build_system_prompt(agent),
         checkpointer=checkpointer,
         middleware=build_middleware(model),

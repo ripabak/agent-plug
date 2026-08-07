@@ -155,6 +155,9 @@ class RunStartInput(BaseModel):
     agent_id: int | None = None
     messages: list[ChatMessage] = []
     thread_id: str | None = None  # public widget: optional custom thread id
+    # Current page URL the visitor is viewing (sent by the widget on every
+    # message). Stored on the thread; used by the read_current_page tool.
+    page_url: str | None = None
 
 
 class CommandResponse(BaseModel):

@@ -160,6 +160,9 @@ class AgentThread(Base):
     user_id: Mapped[int | None] = mapped_column(
         Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=True
     )
+    # Current page URL reported by the widget for this thread (run.start input);
+    # read by the agent's `read_current_page` tool. None = no page context.
+    page_url: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime, server_default=func.now()
     )

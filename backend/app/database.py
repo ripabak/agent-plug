@@ -48,5 +48,6 @@ async def init_db() -> None:
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS persona_prompt TEXT",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_thinking BOOLEAN DEFAULT TRUE",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_tools BOOLEAN DEFAULT TRUE",
+            "ALTER TABLE agent_thread ADD COLUMN IF NOT EXISTS page_url VARCHAR",
         ):
             await conn.execute(text(statement))

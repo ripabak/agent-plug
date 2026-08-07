@@ -181,6 +181,7 @@ async def start_agent_run(
     messages: list[dict],
     user_id: int | None = None,
     client_ip: str | None = None,
+    page_url: str | None = None,
 ) -> str:
     """Start an agent run in the background; returns a run_id."""
     session = session_manager.get(thread_key)
@@ -196,7 +197,7 @@ async def start_agent_run(
             agent = await build_agent(db, agent_id, get_checkpointer())
             thread_config: RunnableConfig = {"configurable": {"thread_id": thread_key}}
 
-            await _upsert_thread_mapping(db, thread_key, agent_id, user_id)
+            await _upsert_thread_mapping(db, thread_key, agent_id, user_id, page_url)
 
             state = await agent.aget_state(thread_config)
             has_history = bool(state is not None and state.values.get("messages"))
@@ -393,14 +394,19 @@ def _encode_sse(event: dict) -> str:
     return f"{id_line}event: {event_type}\ndata: {data}\n\n"
 
 
-async def _upsert_thread_mapping(db, thread_key: str, agent_id: int, user_id: int | None) -> None:
+async def _upsert_thread_mapping(
+    db, thread_key: str, agent_id: int, user_id: int | None, page_url: str | None = None
+) -> None:
     result = await db.execute(select(AgentThread).where(AgentThread.thread_id == thread_key))
     mapping = result.scalar_one_or_none()
     if mapping is None:
-        db.add(AgentThread(thread_id=thread_key, agent_id=agent_id, user_id=user_id))
+        db.add(AgentThread(thread_id=thread_key, agent_id=agent_id, user_id=user_id, page_url=page_url))
     elif mapping.agent_id != agent_id:
         mapping.agent_id = agent_id
         mapping.user_id = user_id
+        mapping.page_url = page_url
+    elif page_url is not None:
+        mapping.page_url = page_url  # SPA navigation: keep the URL current
     await db.commit()
 
 
