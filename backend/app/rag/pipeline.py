@@ -5,17 +5,16 @@ InMemoryVectorStore holds the chunks with {url, title, source_id, agent_id}
 metadata so answers can cite sources and sources can be deleted.
 """
 import asyncio
-import os
 
 from langchain_core.documents import Document
 from sqlalchemy import select, update
 
-from ..config import UPLOAD_DIR
 from ..database import async_session
 from ..models import Source
+from ..storage import storage
 from . import store_manager
 from .fetcher import fetch_page
-from .pdf import parse_pdf
+from .pdf import parse_pdf_bytes
 from .splitter import split_text
 
 
@@ -25,9 +24,9 @@ async def _load_source_text(source: Source) -> tuple[str, str]:
         # Pasted long text: stored directly in the DB.
         return source.text_content or "", source.title or "Pasted text"
     if source.kind == "pdf":
-        # Uploaded PDF: read the stored file from disk (no network).
-        path = os.path.join(UPLOAD_DIR, source.file_path or "")
-        text = await asyncio.to_thread(parse_pdf, path)
+        # Uploaded PDF: read the bytes from the storage backend (S3 or disk).
+        data = await storage.get(source.file_path or "")
+        text = await asyncio.to_thread(parse_pdf_bytes, data)
         title = (source.file_name or "document").rsplit(".", 1)[0]
         return text, title
     # URL source: fetch + parse the HTML page.

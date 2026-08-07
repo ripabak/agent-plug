@@ -41,11 +41,22 @@ BACKEND_PUBLIC_URL = os.getenv(
     "BACKEND_PUBLIC_URL", "http://localhost:8000"
 )
 
-# Local upload directory for PDF knowledge sources.
+# Local upload directory for PDF knowledge sources (used by LocalStorage).
 _BACKEND_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 UPLOAD_DIR = os.path.join(_BACKEND_ROOT, os.getenv("UPLOAD_DIR", "uploads"))
 UPLOAD_MAX_FILES = int(os.getenv("UPLOAD_MAX_FILES", 5))
 UPLOAD_MAX_SIZE = int(os.getenv("UPLOAD_MAX_SIZE", 10 * 1024 * 1024))  # 10 MB per file
+
+# --- Storage (where uploaded PDFs live) ---
+# local = filesystem under UPLOAD_DIR (default); s3 = S3-compatible object
+# storage such as SeaweedFS or MinIO (see docker-compose.yml `seaweedfs`).
+STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "local").strip().lower()
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")  # e.g. http://seaweedfs:8333
+S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "")
+S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "")
+S3_BUCKET = os.getenv("S3_BUCKET", "agent-plug")
+S3_PREFIX = os.getenv("S3_PREFIX", "")  # optional key prefix (e.g. per environment)
+S3_REGION = os.getenv("S3_REGION", "us-east-1")  # ignored by SeaweedFS, needed by boto3
 
 # --- RAG ---
 RAG_CHUNK_SIZE = int(os.getenv("RAG_CHUNK_SIZE", 1000))

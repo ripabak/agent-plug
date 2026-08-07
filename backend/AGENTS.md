@@ -42,10 +42,15 @@ backend/
     rag/
       embeddings.py        # OpenRouterEmbeddings (custom Embeddings impl, batched)
       fetcher.py           # URL fetch + BeautifulSoup HTML parsing (strip scripts/nav/footer)
-      pdf.py               # pypdf text extraction for uploaded PDFs
+      pdf.py               # pypdf text extraction (parse_pdf / parse_pdf_bytes)
       splitter.py          # RecursiveCharacterTextSplitter
       store.py             # RAGStoreManager (per-agent InMemoryVectorStore + chunk bookkeeping)
       pipeline.py          # index_source / reindex / rebuild_all (branch by source.kind)
+    storage/
+      base.py              # Storage protocol (put/get/delete/replace/exists)
+      local.py             # LocalStorage — filesystem under UPLOAD_DIR (default)
+      s3.py                # S3Storage — boto3, S3-compatible (SeaweedFS/MinIO/AWS)
+      __init__.py          # `storage` singleton, dipilih dari STORAGE_BACKEND
     widget/widget.js       # self-contained embeddable widget (no deps, no build)
   tests/                   # pytest: unit + API integration (uses agent-plug-test DB)
 ```
@@ -62,9 +67,11 @@ uv run pyright main.py app/ tests/        # type-check — must be 0 errors befo
 `DATABASE_URL`, `SECRET_KEY`, `CORS_ORIGINS`, `OPENROUTER_API_KEY`,
 `OPENROUTER_MODEL`, `OPENROUTER_BASE_URL`, `OPENROUTER_EMBEDDING_MODEL`,
 `BACKEND_PUBLIC_URL`, `UPLOAD_DIR` (default `uploads/`), `UPLOAD_MAX_FILES=5`,
-`UPLOAD_MAX_SIZE=10MB`. Tests set `AP_TESTING=1` + a `agent-plug-test` DB
-(see `tests/conftest.py`). Create both DBs: `agent-plug` (dev) and
-`agent-plug-test` (pytest).
+`UPLOAD_MAX_SIZE=10MB`. Storage: `STORAGE_BACKEND` (`local`|`s3`),
+`S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`,
+`S3_PREFIX`, `S3_REGION` (lihat `app/storage/`). Tests set `AP_TESTING=1` + a
+`agent-plug-test` DB (see `tests/conftest.py`). Create both DBs:
+`agent-plug` (dev) and `agent-plug-test` (pytest).
 
 ## Conventions & Rules
 - **Modularity**: routers only validate + delegate; business logic lives in
@@ -75,11 +82,18 @@ uv run pyright main.py app/ tests/        # type-check — must be 0 errors befo
   `database.py`). Always add the ALTER for existing dev DBs.
 - **RAG stores are in-memory**: on startup `rebuild_all()` re-indexes from the
   `source` rows (background task in lifespan). Sources: `kind=url` (HTML
-  fetch), `kind=pdf` (file under `uploads/{agent_id}/`, parsed with pypdf),
-  `kind=text` (pasted text in `text_content` column). Every chunk carries
-  `{url, title, source_id, agent_id}` metadata; `url` is `https://…`,
-  `file://…`, or `text://…` — citations always resolve server-side, never from
-  model-generated text.
+  fetch), `kind=pdf` (file stored in the storage backend — local disk under
+  `uploads/{agent_id}/` atau S3/SeaweedFS — key `{agent_id}/{uuid}.pdf`,
+  parsed with pypdf), `kind=text` (pasted text in `text_content` column).
+  Every chunk carries `{url, title, source_id, agent_id}` metadata; `url` is
+  `https://…`, `file://…`, or `text://…` — citations always resolve
+  server-side, never from model-generated text.
+- **Storage**: SEMUA akses file lewat `app.storage.storage` (singleton,
+  `STORAGE_BACKEND=local|s3`) — jangan tulis langsung ke `UPLOAD_DIR` di
+  router/pipeline. Key bersifat portable antar backend. Endpoint file:
+  upload `POST .../sources/files`, replace `PUT .../sources/{id}/file`
+  (overwrite key yang sama → citation URL stabil), delete
+  `DELETE .../sources/{id}` (idempotent).
 - **Chat threads**: dashboard = `u{user_id}:{thread_id}`, widget =
   `a{agent_id}:{thread_id}`. Public endpoints authenticate with the
   `X-Agent-Token` header (agent.public_token).

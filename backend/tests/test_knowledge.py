@@ -200,7 +200,86 @@ def test_delete_pdf_source_removes_file(client, auth_headers, monkeypatch):
     assert client.delete(
         f"/api/agents/{agent['id']}/sources/{source['id']}", headers=headers
     ).status_code == 204
-    assert not path.exists()  # file removed from disk
+    assert not path.exists()  # file removed from storage
+
+
+def test_replace_pdf_file(client, auth_headers, monkeypatch):
+    """Replacing keeps the same key → same citation URL, file overwritten."""
+    headers, _ = auth_headers
+    agent = _create_agent(client, headers)
+    monkeypatch.setattr("app.routers.knowledge.index_pending_sources", noop_index)
+
+    res = client.post(
+        f"/api/agents/{agent['id']}/sources/files",
+        files=[("files", ("v1.pdf", make_pdf("Version one content"), "application/pdf"))],
+        headers=headers,
+    )
+    source = res.json()[0]
+    rel = source["url"][len("file://"):]
+    path = Path(UPLOAD_DIR, rel)
+    assert path.is_file()
+
+    new_pdf = make_pdf("Version two content is different")
+    res = client.put(
+        f"/api/agents/{agent['id']}/sources/{source['id']}/file",
+        files=[("file", ("v2.pdf", new_pdf, "application/pdf"))],
+        headers=headers,
+    )
+    assert res.status_code == 200, res.text
+    updated = res.json()
+    assert updated["file_name"] == "v2.pdf"
+    assert updated["file_size"] == len(new_pdf)
+    assert updated["status"] == "pending"  # re-index scheduled
+    assert updated["url"] == source["url"]  # same key → stable citation URL
+    assert path.stat().st_size == len(new_pdf)  # old bytes overwritten
+
+
+def test_replace_requires_pdf_source(client, auth_headers, monkeypatch):
+    headers, _ = auth_headers
+    agent = _create_agent(client, headers)
+    monkeypatch.setattr("app.routers.knowledge.index_pending_sources", noop_index)
+
+    res = client.post(
+        f"/api/agents/{agent['id']}/sources",
+        json={"urls": ["https://example.com/x"]},
+        headers=headers,
+    )
+    source = res.json()[0]
+    res = client.put(
+        f"/api/agents/{agent['id']}/sources/{source['id']}/file",
+        files=[("file", ("x.pdf", make_pdf("x"), "application/pdf"))],
+        headers=headers,
+    )
+    assert res.status_code == 422
+
+
+def test_replace_rejects_non_pdf_and_missing(client, auth_headers, monkeypatch):
+    headers, _ = auth_headers
+    agent = _create_agent(client, headers)
+    monkeypatch.setattr("app.routers.knowledge.index_pending_sources", noop_index)
+
+    res = client.post(
+        f"/api/agents/{agent['id']}/sources/files",
+        files=[("files", ("doc.pdf", make_pdf("Doc"), "application/pdf"))],
+        headers=headers,
+    )
+    source = res.json()[0]
+
+    # not a PDF
+    res = client.put(
+        f"/api/agents/{agent['id']}/sources/{source['id']}/file",
+        files=[("file", ("notes.txt", b"not pdf", "text/plain"))],
+        headers=headers,
+    )
+    assert res.status_code == 422
+
+    # source does not exist
+    res = client.put(
+        f"/api/agents/{agent['id']}/sources/999999/file",
+        files=[("file", ("x.pdf", make_pdf("x"), "application/pdf"))],
+        headers=headers,
+    )
+    assert res.status_code == 404
 
 
 def test_add_text_source(client, auth_headers, monkeypatch):

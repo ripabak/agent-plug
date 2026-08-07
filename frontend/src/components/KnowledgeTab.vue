@@ -100,6 +100,43 @@ async function removeSource(sourceId: number) {
   await agentsStore.deleteSource(agentId.value, sourceId)
 }
 
+// ---- PDF replace (PUT /sources/{id}/file — same key, re-indexed) ----
+const replaceInput = ref<HTMLInputElement | null>(null)
+const replacingId = ref<number | null>(null)
+const replacing = ref(false)
+
+function startReplace(sourceId: number) {
+  if (replacing.value) return
+  replacingId.value = sourceId
+  replaceInput.value?.click()
+}
+
+async function onReplaceChange(e: Event) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  const sourceId = replacingId.value
+  if (sourceId === null) return
+  input.value = ''
+  replacingId.value = null
+  if (!file) return
+  if (!file.name.toLowerCase().endsWith('.pdf')) {
+    error.value = 'Only .pdf files are supported.'
+    return
+  }
+  replacing.value = true
+  error.value = ''
+  notice.value = ''
+  try {
+    const updated = await api.replaceSourceFile(auth.token, agentId.value, sourceId, file)
+    notice.value = `Replaced ${updated.file_name} — re-indexing started.`
+    await load()
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Replace failed'
+  } finally {
+    replacing.value = false
+  }
+}
+
 async function reindex(onlyFailed = false) {
   notice.value = 'Re-indexing… statuses update automatically.'
   await agentsStore.reindex(agentId.value, onlyFailed)
@@ -194,6 +231,7 @@ async function addText() {
             </div>
           </div>
           <input ref="fileInput" type="file" accept=".pdf,application/pdf" multiple hidden @change="onFileChange" />
+          <input ref="replaceInput" type="file" accept=".pdf,application/pdf" hidden @change="onReplaceChange" />
         </div>
       </template>
 
@@ -249,6 +287,10 @@ async function addText() {
             <div v-if="s.error" class="row-sub" style="color: var(--danger)">{{ s.error }}</div>
           </div>
           <StatusBadge :status="statusOf(s)" />
+          <button v-if="s.kind === 'pdf'" class="btn btn-ghost btn-sm" :disabled="replacing" @click="startReplace(s.id)">
+            <span v-if="replacing && replacingId === s.id" class="spinner" style="margin-right: 4px" />
+            {{ replacing && replacingId === s.id ? 'Replacing…' : 'Replace' }}
+          </button>
           <button class="btn btn-ghost btn-sm" @click="removeSource(s.id)">Remove</button>
         </div>
       </div>

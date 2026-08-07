@@ -107,6 +107,26 @@ export const api = {
   },
   deleteSource: (token: string, agentId: number, sourceId: number) =>
     request<void>(`/api/agents/${agentId}/sources/${sourceId}`, { method: 'DELETE', token }),
+  replaceSourceFile: async (token: string, agentId: number, sourceId: number, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await fetch(`${API_BASE}/api/agents/${agentId}/sources/${sourceId}/file`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+    })
+    if (!res.ok) {
+      let message = `Replace failed (${res.status})`
+      try {
+        const data = await res.json()
+        if (typeof data.detail === 'string') message = data.detail
+      } catch {
+        /* keep default */
+      }
+      throw new ApiError(res.status, message)
+    }
+    return (await res.json()) as Source
+  },
   reindexSources: (token: string, agentId: number, onlyFailed = false) =>
     request<{ scheduled: number }>(`/api/agents/${agentId}/sources/reindex`, {
       method: 'POST',
