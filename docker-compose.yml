@@ -29,7 +29,9 @@ name: agent-plug
 
 services:
   db:
-    image: postgres:17-alpine
+    # pgvector image: PostgreSQL 17 + ekstensi `vector` sudah terpasang
+    # (stock postgres:17-alpine TIDAK punya pgvector → CREATE EXTENSION gagal).
+    image: pgvector/pgvector:pg17
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
