@@ -80,6 +80,57 @@ class TestFetchPage:
             fetch_page("https://acme.com/missing", client=client)  # type: ignore[arg-type]
 
 
+class TestLinksPreserved:
+    LINKED_HTML = """<!DOCTYPE html>
+<html>
+<head><title>Linky</title></head>
+<body>
+  <main>
+    <p>See <a href="/docs/guide">the guide</a> and
+       <a href="https://example.com/abs">absolute link</a>.</p>
+    <p>No href: <a>plain</a>; empty href: <a href="">nothing</a>.</p>
+    <p>Icon only: <a href="/icon.svg"></a></p>
+  </main>
+</body>
+</html>
+"""
+
+    def test_content_links_become_markdown_links(self):
+        page = fetch_page(
+            "https://acme.com/docs/start",
+            client=_FakeClient(httpx.Response(200, text=self.LINKED_HTML)),  # type: ignore[arg-type]
+        )
+        # relative href resolved against the page URL
+        assert "[the guide](https://acme.com/docs/guide)" in page.text
+        # absolute href kept as-is
+        assert "[absolute link](https://example.com/abs)" in page.text
+        # anchors without a usable href stay as plain text
+        assert "plain" in page.text
+        assert "nothing" in page.text
+        assert "(plain)" not in page.text and "(nothing)" not in page.text
+        # image-only anchor falls back to the raw href as link text
+        assert "[/icon.svg](https://acme.com/icon.svg)" in page.text
+
+    def test_base_href_is_honoured(self):
+        html = (
+            '<html><head><title>Base</title>'
+            '<base href="https://cdn.acme.com/"></head>'
+            '<body><p><a href="files/a.pdf">file</a></p></body></html>'
+        )
+        page = fetch_page(
+            "https://acme.com/docs",
+            client=_FakeClient(httpx.Response(200, text=html)),  # type: ignore[arg-type]
+        )
+        assert "[file](https://cdn.acme.com/files/a.pdf)" in page.text
+
+    def test_nav_links_still_stripped_as_boilerplate(self):
+        # nav/header/footer are decomposed before link inlining, so their
+        # links must NOT survive into the text.
+        page = fetch_page("https://acme.com/docs", client=_FakeClient(httpx.Response(200, text=FIXTURE_HTML)))  # type: ignore[arg-type]
+        assert "Pricing" not in page.text
+        assert "[Pricing](https://acme.com/pricing)" not in page.text
+
+
 class TestCleanText:
     def test_collapses_whitespace(self):
         assert _clean_text("  hello \t world  \n\n\n  next") == "hello world\nnext"

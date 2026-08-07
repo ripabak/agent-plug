@@ -42,7 +42,7 @@ backend/
       checkpointer.py      # AsyncPostgresSaver lifecycle
     rag/
       embeddings.py        # OpenRouterEmbeddings (custom Embeddings impl, batched)
-      fetcher.py           # URL fetch + BeautifulSoup HTML parsing (strip scripts/nav/footer)
+      fetcher.py           # URL fetch + BeautifulSoup HTML parsing (strip scripts/nav/footer; anchors inlined as [text](href))
       pdf.py               # pypdf text extraction (parse_pdf / parse_pdf_bytes)
       splitter.py          # RecursiveCharacterTextSplitter
       store.py             # RAGStoreManager (per-agent PGVector collection + chunk bookkeeping)

@@ -191,7 +191,7 @@ def create_page_tool(agent_id: int):
         currently on (e.g. "what does this page say about X?", "summarize this
         page", "is this offer in the page?"). For questions about the website
         in general, use search_knowledge_base instead. Returns the page title
-        followed by its readable text.
+        followed by its readable text, with links preserved as [text](href).
         """
         thread_key = (config.get("configurable") or {}).get("thread_id", "")
         if not thread_key:
@@ -231,8 +231,9 @@ def create_fetch_web_tool():
         knowledge base (e.g. "what does example.com say about X?", "check the
         latest info at <url>", "summarize <url>"). For the page the visitor is
         currently viewing, use read_current_page instead. Returns the page
-        title followed by its readable text (truncated). Only public http(s)
-        URLs can be fetched — internal/private addresses are refused.
+        title followed by its readable text, with links preserved as
+        [text](href) (truncated). Only public http(s) URLs can be fetched —
+        internal/private addresses are refused.
         """
         emit_progress("Fetching web page…")
         try:
