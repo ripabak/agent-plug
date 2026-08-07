@@ -4,7 +4,11 @@ import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', redirect: '/dashboard' },
+    {
+      path: '/',
+      name: 'home',
+      component: () => import('@/views/LandingView.vue'),
+    },
     {
       path: '/login',
       name: 'login',
@@ -35,7 +39,7 @@ const router = createRouter({
       component: () => import('@/views/AgentDetailView.vue'),
       meta: { auth: true },
     },
-    { path: '/:pathMatch(.*)*', redirect: '/dashboard' },
+    { path: '/:pathMatch(.*)*', redirect: '/' },
   ],
 })
 

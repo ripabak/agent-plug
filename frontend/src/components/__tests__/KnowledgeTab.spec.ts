@@ -6,15 +6,22 @@ vi.mock('@/api/client', () => ({
   api: {
     listSources: vi.fn<(token: string, agentId: number) => Promise<Source[]>>(),
     addSources: vi.fn<(token: string, agentId: number, urls: string[]) => Promise<Source[]>>(),
-    addTextSource: vi.fn<
-      (token: string, agentId: number, data: { title?: string; content: string }) => Promise<Source>
-    >(),
-    uploadSourceFiles: vi.fn<(token: string, agentId: number, files: File[]) => Promise<Source[]>>(),
+    addTextSource:
+      vi.fn<
+        (
+          token: string,
+          agentId: number,
+          data: { title?: string; content: string },
+        ) => Promise<Source>
+      >(),
+    uploadSourceFiles:
+      vi.fn<(token: string, agentId: number, files: File[]) => Promise<Source[]>>(),
     deleteSource: vi.fn<(token: string, agentId: number, sourceId: number) => Promise<void>>(),
     getSourceFile: vi.fn<(token: string, agentId: number, sourceId: number) => Promise<Blob>>(),
-    reindexSources: vi.fn<
-      (token: string, agentId: number, onlyFailed?: boolean) => Promise<{ scheduled: number }>
-    >(),
+    reindexSources:
+      vi.fn<
+        (token: string, agentId: number, onlyFailed?: boolean) => Promise<{ scheduled: number }>
+      >(),
   },
   ApiError: class ApiError extends Error {},
   getStoredToken: () => '',

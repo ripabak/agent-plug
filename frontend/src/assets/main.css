@@ -424,7 +424,9 @@ img.agent-avatar {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.12s ease, border-color 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    border-color 0.12s ease;
 }
 .avatar-template:hover {
   transform: scale(1.08);

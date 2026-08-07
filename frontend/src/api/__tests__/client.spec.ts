@@ -121,9 +121,11 @@ describe('api client', () => {
   })
 
   it('fetches a source PDF file as a blob with auth header', async () => {
-    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
-      new Response('pdf-bytes', { status: 200, headers: { 'Content-Type': 'application/pdf' } }),
-    )
+    globalThis.fetch = vi
+      .fn<typeof fetch>()
+      .mockResolvedValue(
+        new Response('pdf-bytes', { status: 200, headers: { 'Content-Type': 'application/pdf' } }),
+      )
     const blob = await api.getSourceFile('tok123', 7, 9)
     expect(await blob.text()).toBe('pdf-bytes')
 

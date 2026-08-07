@@ -75,7 +75,12 @@ export const api = {
     request<void>(`/api/agents/${id}`, { method: 'DELETE', token }),
   regenerateToken: (token: string, id: number) =>
     request<Agent>(`/api/agents/${id}/regenerate-token`, { method: 'POST', token }),
-  uploadAgentAvatar: async (token: string, id: number, file: File, kind: 'photo' | 'template' = 'photo') => {
+  uploadAgentAvatar: async (
+    token: string,
+    id: number,
+    file: File,
+    kind: 'photo' | 'template' = 'photo',
+  ) => {
     const form = new FormData()
     form.append('file', file)
     form.append('kind', kind)

@@ -13,9 +13,10 @@ vi.mock('@/api/client', () => ({
     updateAgent: vi.fn<(token: string, id: number, data: Partial<Agent>) => Promise<Agent>>(),
     deleteAgent: vi.fn<(token: string, id: number) => Promise<void>>(),
     regenerateToken: vi.fn<(token: string, id: number) => Promise<Agent>>(),
-    uploadAgentAvatar: vi.fn<
-      (token: string, id: number, file: File, kind: 'photo' | 'template') => Promise<Agent>
-    >(),
+    uploadAgentAvatar:
+      vi.fn<
+        (token: string, id: number, file: File, kind: 'photo' | 'template') => Promise<Agent>
+      >(),
     deleteAgentAvatar: vi.fn<(token: string, id: number) => Promise<Agent>>(),
     listSources: vi.fn<(token: string, agentId: number) => Promise<never[]>>(),
     addSources: vi.fn<(token: string, agentId: number, urls: string[]) => Promise<never[]>>(),
