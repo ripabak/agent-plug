@@ -454,7 +454,7 @@
       '.' + uid + '-sources-file{display:block;color:' + t.sourcesLabel + ';}' +
       '.' + uid + '-sources a{color:' + t.link + ';text-decoration:underline;text-underline-offset:2px;display:block;margin-top:2px;}' +
       '.' + uid + '-toolbar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid ' + t.toolbarBorder + ';background:' + t.toolbarBg + ';}' +
-      '.' + uid + '-input{flex:1;border:1px solid ' + t.inputBorder + ';border-radius:10px;padding:9px 12px;font-size:14px;resize:none;outline:none;font-family:inherit;max-height:96px;background:' + t.inputBg + ';color:' + t.inputText + ';}' +
+      '.' + uid + '-input{flex:1;border:1px solid ' + t.inputBorder + ';border-radius:10px;padding:9px 12px;font-size:18px;resize:none;outline:none;font-family:inherit;max-height:96px;background:' + t.inputBg + ';color:' + t.inputText + ';}' +
       '.' + uid + '-input:focus{border-color:' + t.accent + ';}' +
       '.' + uid + '-send{background:' + t.btnBg + ';color:' + t.btnText + ';border:none;border-radius:10px;padding:9px 14px;font-size:14px;cursor:pointer;}' +
       '.' + uid + '-send:disabled{opacity:.5;cursor:default;}' +
