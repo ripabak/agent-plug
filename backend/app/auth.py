@@ -8,6 +8,7 @@ from jose import JWTError, jwt
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from . import config
 from .config import ACCESS_TOKEN_EXPIRE_MINUTES, ALGORITHM, SECRET_KEY
 from .database import get_db
 from .models import User
@@ -63,3 +64,47 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
         )
     return user
+
+
+# --- Platform admin (env-configured, read-only) ---
+
+
+def create_admin_token() -> str:
+    """Signed JWT for the env-configured platform admin (role claim 'admin').
+
+    Uses `sub="admin"` so regular user endpoints (which parse sub as an int)
+    can never accept an admin token.
+    """
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    payload = {"sub": "admin", "role": "admin", "exp": expire}
+    return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+
+
+async def get_current_admin(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security),
+) -> str:
+    """FastAPI dependency: require an admin token; return the admin email.
+
+    Config is read via the module attribute (not a bound import) so tests can
+    monkeypatch `app.config.ADMIN_EMAIL`/`ADMIN_PASSWORD`.
+    """
+    if not config.ADMIN_EMAIL or not config.ADMIN_PASSWORD:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access is not configured",
+        )
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    try:
+        payload = jwt.decode(credentials.credentials, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        ) from None
+    if payload.get("role") != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required"
+        )
+    return str(payload.get("sub", "admin"))

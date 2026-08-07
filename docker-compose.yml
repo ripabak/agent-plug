@@ -57,6 +57,9 @@ services:
       DATABASE_URL: postgresql+asyncpg://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/agent-plug
       # JWT signing secret — set a random one in .env (e.g. `openssl rand -hex 32`).
       SECRET_KEY: ${SECRET_KEY:-dev-secret-change-in-production}
+      # Platform admin (read-only monitoring console at /admin). Empty = disabled.
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-change-me-admin}
       # Comma-separated origins allowed by CORS (dashboard + widget test pages).
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
       # Public base URL used to build the embed snippet / widget script URL.

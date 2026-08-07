@@ -1,5 +1,6 @@
 """Agent CRUD + personalization routes (user-scoped)."""
 import asyncio
+import json
 import secrets
 from datetime import datetime
 
@@ -8,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth import get_current_user
-from ..config import AVATAR_CONTENT_TYPES, AVATAR_MAX_SIZE
+from ..config import AVATAR_CONTENT_TYPES, AVATAR_MAX_SIZE, DEFAULT_CHAT_PRESET
 from ..database import get_db
 from ..models import Agent, User
 from ..rag import store_manager
@@ -48,12 +49,13 @@ async def create_agent(data: AgentCreate, user: User = Depends(get_current_user)
         user_id=user.id,
         name=data.name,
         description=data.description,
-        system_prompt=data.system_prompt,
         persona_prompt=data.persona_prompt,
         welcome_message=data.welcome_message,
-        theme_color=data.theme_color,
         avatar_emoji=data.avatar_emoji,
-        chat_theme=data.chat_theme,
+        # Fresh agents default to the platform theme (a preset baked into
+        # chat_theme); the legacy theme_color column is gone.
+        chat_theme=data.chat_theme
+        or json.dumps({"preset": DEFAULT_CHAT_PRESET, "custom": {}, "touched": False}),
         show_thinking=data.show_thinking,
         show_tools=data.show_tools,
         public_token=secrets.token_urlsafe(32),

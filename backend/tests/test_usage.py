@@ -88,13 +88,21 @@ async def _register_and_create_agent(async_client) -> tuple[dict, dict, int]:
     return headers, res.json(), user_id
 
 
-async def _run_preview_chat(async_client, headers, agent_id: int, thread: str, user_id: int) -> None:
+async def _run_preview_chat(
+    async_client, headers, agent_id: int, thread: str, user_id: int, page_url: str | None = None
+) -> None:
     res = await async_client.post(
         f"/api/threads/{thread}/commands",
         json={
             "method": "run.start",
             "id": "c1",
-            "params": {"input": {"agent_id": agent_id, "messages": [{"role": "user", "content": "hi"}]}},
+            "params": {
+                "input": {
+                    "agent_id": agent_id,
+                    "messages": [{"role": "user", "content": "hi"}],
+                    **({"page_url": page_url} if page_url else {}),
+                }
+            },
         },
         headers=headers,
     )
@@ -103,14 +111,20 @@ async def _run_preview_chat(async_client, headers, agent_id: int, thread: str, u
     await _collect_stream(f"u{user_id}:{thread}")
 
 
-async def _run_widget_chat(async_client, agent: dict, thread: str) -> None:
+async def _run_widget_chat(async_client, agent: dict, thread: str, page_url: str | None = None) -> None:
     tok = {"X-Agent-Token": agent["public_token"]}
     res = await async_client.post(
         f"/api/public/agents/{agent['id']}/commands",
         json={
             "method": "run.start",
             "id": "c1",
-            "params": {"input": {"thread_id": thread, "messages": [{"role": "user", "content": "hi widget"}]}},
+            "params": {
+                "input": {
+                    "thread_id": thread,
+                    "messages": [{"role": "user", "content": "hi widget"}],
+                    **({"page_url": page_url} if page_url else {}),
+                }
+            },
         },
         headers=tok,
     )
@@ -144,6 +158,27 @@ async def _wait_for_usage(async_client, headers, agent_id: int, expected_total: 
             return body
         await asyncio.sleep(0.05)
     raise AssertionError(f"usage rows never reached {expected_total}")
+
+
+@pytest.mark.asyncio
+async def test_usage_rows_carry_page_url(async_client):
+    """The usage row records WHERE the widget was embedded (page_url)."""
+    headers, agent, user_id = await _register_and_create_agent(async_client)
+    await _run_preview_chat(
+        async_client,
+        headers,
+        agent["id"],
+        "page-url-thread",
+        user_id,
+        page_url="https://shop.example.com/items/42",
+    )
+    await _run_widget_chat(
+        async_client, agent, "page-url-widget", page_url="https://landing.example.com/pricing"
+    )
+
+    body = await _wait_for_usage(async_client, headers, agent["id"], expected_total=2)
+    urls = {i["page_url"] for i in body["items"]}
+    assert urls == {"https://shop.example.com/items/42", "https://landing.example.com/pricing"}
 
 
 # ------------------------------------------------------------------- tests

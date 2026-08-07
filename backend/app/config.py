@@ -27,6 +27,14 @@ SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 24 * 7))
 
+# --- Platform admin (read-only monitoring) ---
+# Email + password of the platform admin, configured via env. The admin is a
+# SPECIAL principal (not a User row): logs in via POST /api/admin/login and
+# gets a JWT with role="admin". If either value is empty, admin access is
+# disabled (endpoints return 403).
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "")
+
 CORS_ORIGINS = [
     o.rstrip("/")
     for o in os.getenv(
@@ -71,6 +79,11 @@ INDEX_CONCURRENCY = int(os.getenv("INDEX_CONCURRENCY", 3))
 # read_current_page tool: max chars of page text passed to the model per call
 # (the rest is truncated — pages stay queryable via the knowledge base).
 PAGE_CONTEXT_MAX_CHARS = int(os.getenv("PAGE_CONTEXT_MAX_CHARS", 10000))
+
+# Chat theme preset baked into `chat_theme` when an agent is created, so a
+# fresh agent renders with the platform theme (must match the `platform`
+# preset in frontend src/utils/themes.ts AND backend/app/widget/widget.js).
+DEFAULT_CHAT_PRESET = os.getenv("DEFAULT_CHAT_PRESET", "platform")
 
 # --- Agent avatar (photo/logo upload) ---
 # Raw upload is validated on both FE and BE; the file is then compressed to

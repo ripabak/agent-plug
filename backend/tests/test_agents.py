@@ -6,7 +6,6 @@ AGENT = {
     "name": "Docs Bot",
     "description": "Answers questions about our docs",
     "welcome_message": "Hello!",
-    "theme_color": "#ff0000",
     "avatar_emoji": "🦊",
 }
 
@@ -24,7 +23,10 @@ class TestAgentAPI:
         agent = _create_agent(client, headers)
         assert len(agent["public_token"]) >= 32
         assert agent["name"] == "Docs Bot"
-        assert agent["theme_color"] == "#ff0000"
+        # fresh agents are baked with the platform theme preset
+        assert agent["chat_theme"] == (
+            '{"preset": "platform", "custom": {}, "touched": false}'
+        )
 
     def test_create_requires_auth(self, client):
         assert client.post("/api/agents", json=AGENT).status_code == 401
@@ -40,8 +42,8 @@ class TestAgentAPI:
         )
         assert res.status_code == 200
         assert res.json()["name"] == "Renamed"
-        # other fields unchanged
-        assert res.json()["theme_color"] == "#ff0000"
+        # other fields unchanged (theme preset survives the patch)
+        assert res.json()["chat_theme"] == agent["chat_theme"]
 
     def test_ownership_enforced(self, client, auth_headers):
         headers, _ = auth_headers
@@ -118,4 +120,3 @@ class TestAgentAPI:
         assert body["show_thinking"] is True
         assert body["show_tools"] is True
         assert "slate" in body["chat_theme"]
-        assert body["theme_color"] == "#ff0000"

@@ -18,10 +18,8 @@ export interface Agent {
   user_id: number
   name: string
   description: string
-  system_prompt: string | null
   persona_prompt: string | null
   welcome_message: string
-  theme_color: string
   avatar_emoji: string
   avatar_url: string | null
   avatar_kind: 'photo' | 'template'
@@ -85,6 +83,11 @@ export interface UsageLog {
   country: string | null
   status: UsageStatus
   created_at: string
+  // URL of the page where the widget was embedded ("from where it was called").
+  page_url?: string | null
+  // Filled only by admin (platform-wide) queries.
+  agent_id?: number | null
+  agent_name?: string | null
 }
 
 export interface UsagePoint {
@@ -115,4 +118,65 @@ export interface UsageResponse {
   page: number
   page_size: number
   pages: number
+}
+
+// --- admin (read-only platform monitoring) ---
+export interface AdminTokenResponse {
+  access_token: string
+  token_type: string
+  email: string
+}
+
+export interface AdminUserRow {
+  id: number
+  email: string
+  display_name: string
+  created_at: string
+  agent_count: number
+  total_requests: number
+  total_tokens: number
+  last_active: string | null
+}
+
+export interface AdminUsersResponse {
+  items: AdminUserRow[]
+  total: number
+  page: number
+  page_size: number
+  pages: number
+}
+
+export interface AdminAgentRow {
+  id: number
+  name: string
+  description: string
+  avatar_emoji: string
+  avatar_url: string | null
+  chat_theme: string
+  created_at: string
+  source_count: number
+  ready_sources: number
+  total_requests: number
+  total_tokens: number
+  last_active: string | null
+}
+
+export interface AdminUserDetail {
+  user: AdminUserRow
+  agents: AdminAgentRow[]
+}
+
+export interface AdminAgentDetail {
+  agent: Agent
+  user: AdminUserRow
+}
+
+export interface AdminStats {
+  total_users: number
+  total_agents: number
+  total_requests: number
+  total_input_tokens: number
+  total_output_tokens: number
+  total_tokens: number
+  series: UsagePoint[]
 }

@@ -24,9 +24,8 @@ interface ChatSettings {
 
 /**
  * Persisted theme selection: a base preset + per-token overrides.
- * `touched` is false until the user explicitly picks a preset or tweaks a
- * color — until then the preview keeps the legacy behavior of following the
- * agent's theme_color for the header.
+ * `touched` marks an explicit user pick (preset or color tweak); until then
+ * the agent's baked default preset (chat_theme) drives the look.
  */
 export interface ChatThemeState {
   preset: string
@@ -166,7 +165,7 @@ export const useChatStore = defineStore('chat', () => {
     schedulePersist()
   }
 
-  /** Back to the default theme, untouched (header follows agent theme_color again). */
+  /** Back to the default theme, untouched (header follows the platform default). */
   function resetTheme() {
     themeState.value = { preset: THEME_PRESETS[0]!.name, custom: {}, touched: false }
     saveThemeState()

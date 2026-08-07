@@ -11,19 +11,7 @@ import {
   type ChatTheme,
 } from '@/utils/themes'
 import ColorPreview from '@/components/ColorPreview.vue'
-
-/** Bridge exposed by backend/app/widget/widget.js after it initializes. */
-interface PreviewWidgetBridge {
-  setTheme?: (theme: ChatTheme) => void
-  setOpts?: (showThinking: boolean, showTools: boolean) => void
-  destroy?: () => void
-}
-
-declare global {
-  interface Window {
-    __apwWidgets?: Record<string, PreviewWidgetBridge>
-  }
-}
+import type { WidgetBridge } from '@/utils/widgetBridge'
 
 /** One color control; `keys` sets extra tokens to the same value (merged
  *  chip border+text), `softKey` derives a soft background from the value. */
@@ -128,21 +116,16 @@ const agent = computed(() => agentsStore.current)
 const widgetHost = ref<HTMLDivElement | null>(null)
 
 /**
- * Effective theme: the store's preset + overrides, with one legacy special
- * case — until the user picks a theme/tweaks a color, the header follows the
- * agent's theme_color (the pre-theming preview behavior).
+ * Effective theme: the store's preset + overrides. The agent's chat_theme
+ * (baked to the platform preset at creation) is loaded by initFromAgent, so
+ * the preview always reflects what the visitor sees.
  */
-const effectiveTheme = computed<ChatTheme>(() => {
-  const t = chat.themeColors
-  if (chat.themeCustomized) return t
-  const accent = agent.value?.theme_color || t.accent
-  return { ...t, headerBg: accent }
-})
+const effectiveTheme = computed<ChatTheme>(() => chat.themeColors)
 
 /** CSS variables applied to the config panel card (accent-color, opt colors). */
 const chatVars = computed(() => themeToCssVars(effectiveTheme.value))
 
-function widgetBridge(): PreviewWidgetBridge | undefined {
+function widgetBridge(): WidgetBridge | undefined {
   return agent.value ? window.__apwWidgets?.[String(agent.value.id)] : undefined
 }
 

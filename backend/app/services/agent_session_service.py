@@ -327,14 +327,14 @@ async def start_agent_run(
             session.buffer_event(
                 _make_event("lifecycle", {"event": "completed", "total_usage": session.total_usage.copy()})
             )
-            spawn_usage_log(agent_id, thread_key, user_id, "completed", session.total_usage.copy(), client_ip)
+            spawn_usage_log(agent_id, thread_key, user_id, "completed", session.total_usage.copy(), client_ip, page_url)
 
         except asyncio.CancelledError:
             session.buffer_event(_make_event("lifecycle", {"event": "cancelled"}))
-            spawn_usage_log(agent_id, thread_key, user_id, "cancelled", session.total_usage.copy(), client_ip)
+            spawn_usage_log(agent_id, thread_key, user_id, "cancelled", session.total_usage.copy(), client_ip, page_url)
         except Exception as exc:  # surface failures to the stream
             session.buffer_event(_make_event("lifecycle", {"event": "failed", "error": str(exc)}))
-            spawn_usage_log(agent_id, thread_key, user_id, "failed", session.total_usage.copy(), client_ip)
+            spawn_usage_log(agent_id, thread_key, user_id, "failed", session.total_usage.copy(), client_ip, page_url)
         finally:
             reset_progress_emitter()
             session._running = False

@@ -1505,3 +1505,192 @@ code,
     padding: 8px 6px;
   }
 }
+
+/* --- Admin console (read-only platform monitoring) --- */
+.badge-admin {
+  background: #211f1b;
+  color: #f4efe7;
+  font-size: 0.72em;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.admin-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.admin-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-search input {
+  padding: 7px 10px;
+  border: 1px solid var(--line, #e3dbcf);
+  border-radius: 8px;
+  background: var(--bg, #fff);
+  font: inherit;
+  min-width: 240px;
+}
+
+.admin-users-table tbody tr {
+  cursor: pointer;
+}
+
+.admin-users-table tbody tr:hover {
+  background: rgba(169, 80, 42, 0.05);
+}
+
+.admin-user-name {
+  font-weight: 600;
+}
+
+.admin-user-email {
+  font-size: 0.85em;
+}
+
+.admin-user-row td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.admin-date {
+  white-space: nowrap;
+}
+
+/* date inside a usage-stat card: shrink and allow wrapping so it
+   doesn't overflow the grid on narrow screens */
+.usage-stat-value.admin-date {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: normal;
+}
+
+.admin-user-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.admin-user-head .agent-avatar {
+  font-size: 20px;
+}
+
+.admin-agent-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.admin-agent-emoji {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex: none;
+  color: #fff;
+}
+
+.admin-agent-desc {
+  font-size: 0.85em;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Admin agent read-only detail: field grid. */
+.ro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.ro-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ro-label {
+  font-size: 0.78em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted, #8a8177);
+}
+
+.ro-value {
+  font-size: 0.95em;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.ro-value.ro-pre {
+  white-space: pre-wrap;
+  font-size: 0.85em;
+  background: var(--bg, #faf7f2);
+  border: 1px solid var(--line, #e3dbcf);
+  border-radius: 8px;
+  padding: 10px 12px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.ro-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  vertical-align: -2px;
+  margin-right: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.admin-card-stats {
+  font-size: 0.8em;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* Usage history: where the widget was called from (page URL column). */
+.usage-page {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85em;
+}
+
+.usage-page a {
+  color: var(--accent, #a9502a);
+  text-decoration: none;
+}
+
+.usage-page a:hover {
+  text-decoration: underline;
+}
+
+/* Admin read-only detail: full-width fields in the grid. */
+.ro-field.ro-wide {
+  grid-column: 1 / -1;
+}

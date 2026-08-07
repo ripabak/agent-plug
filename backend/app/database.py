@@ -42,6 +42,7 @@ async def init_db() -> None:
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS file_size INTEGER",
             "ALTER TABLE source ADD COLUMN IF NOT EXISTS text_content TEXT",
             "ALTER TABLE agent_usage ADD COLUMN IF NOT EXISTS country VARCHAR",
+            "ALTER TABLE agent_usage ADD COLUMN IF NOT EXISTS page_url VARCHAR",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS avatar_path VARCHAR",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS avatar_kind VARCHAR NOT NULL DEFAULT 'photo'",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS chat_theme TEXT DEFAULT ''",
@@ -49,5 +50,9 @@ async def init_db() -> None:
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_thinking BOOLEAN DEFAULT TRUE",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_tools BOOLEAN DEFAULT TRUE",
             "ALTER TABLE agent_thread ADD COLUMN IF NOT EXISTS page_url VARCHAR",
+            # Dead columns removed (the theme lives in chat_theme now; the
+            # system prompt is composed server-side, never stored per-agent).
+            "ALTER TABLE agent DROP COLUMN IF EXISTS theme_color",
+            "ALTER TABLE agent DROP COLUMN IF EXISTS system_prompt",
         ):
             await conn.execute(text(statement))

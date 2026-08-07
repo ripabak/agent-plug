@@ -37,8 +37,8 @@ describe('chat themes', () => {
   })
 
   it('monochrome is the default preset', () => {
-    expect(THEME_PRESETS[0]?.name).toBe('monochrome')
-    expect(THEME_PRESETS[0]?.label).toBe('Monochrome')
+    expect(THEME_PRESETS[0]?.name).toBe('platform')
+    expect(THEME_PRESETS[0]?.label).toBe('Platform')
     expect(defaultTheme().headerBg).toBe('#211f1b')
   })
 
@@ -49,24 +49,29 @@ describe('chat themes', () => {
   })
 
   describe('agentHeaderColor', () => {
-    it('falls back to theme_color when no theme is saved', () => {
-      expect(agentHeaderColor({ theme_color: '#ff0000', chat_theme: '' })).toBe('#ff0000')
-      expect(agentHeaderColor({ theme_color: '#ff0000', chat_theme: null })).toBe('#ff0000')
+    it('falls back to the platform default when no theme is saved', () => {
+      expect(agentHeaderColor({ chat_theme: '' })).toBe('#211f1b')
+      expect(agentHeaderColor({ chat_theme: null })).toBe('#211f1b')
+      expect(agentHeaderColor({})).toBe('#211f1b')
     })
 
-    it('uses the saved preset header color once the theme is touched', () => {
+    it('uses the saved preset header color', () => {
       expect(
         agentHeaderColor({
-          theme_color: '#ff0000',
           chat_theme: JSON.stringify({ preset: 'emerald', custom: {}, touched: true }),
         }),
       ).toBe('#059669')
+      // untouched (fresh agent) still applies the baked preset
+      expect(
+        agentHeaderColor({
+          chat_theme: JSON.stringify({ preset: 'platform', custom: {}, touched: false }),
+        }),
+      ).toBe('#211f1b')
     })
 
     it('lets a custom headerBg override the preset', () => {
       expect(
         agentHeaderColor({
-          theme_color: '#ff0000',
           chat_theme: JSON.stringify({
             preset: 'emerald',
             custom: { headerBg: '#123456' },
@@ -76,17 +81,8 @@ describe('chat themes', () => {
       ).toBe('#123456')
     })
 
-    it('ignores an untouched theme and uses theme_color (reset state)', () => {
-      expect(
-        agentHeaderColor({
-          theme_color: '#ff0000',
-          chat_theme: JSON.stringify({ preset: 'monochrome', custom: {}, touched: false }),
-        }),
-      ).toBe('#ff0000')
-    })
-
     it('tolerates malformed chat_theme', () => {
-      expect(agentHeaderColor({ theme_color: '#ff0000', chat_theme: 'not-json{' })).toBe('#ff0000')
+      expect(agentHeaderColor({ chat_theme: 'not-json{' })).toBe('#211f1b')
     })
   })
 

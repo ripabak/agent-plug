@@ -118,9 +118,10 @@ function buildPreset(name: string, label: string, overrides: Partial<ChatTheme>)
   return { ...DEFAULT, ...overrides, name, label }
 }
 
-/** Ready-to-use palettes. `monochrome` is the default (brand) theme. */
+/** Ready-to-use palettes. `platform` is the default (brand) theme — fresh
+ *  agents are created with chat_theme baked to this preset. */
 export const THEME_PRESETS: ThemePreset[] = [
-  buildPreset('monochrome', 'Monochrome', {}),
+  buildPreset('platform', 'Platform', {}),
   buildPreset('indigo', 'Indigo', {
     headerBg: '#4f46e5',
     userBubbleBg: '#4f46e5',
@@ -205,31 +206,28 @@ export function findPreset(name: string): ThemePreset | undefined {
 
 /**
  * Effective chat header color for an agent — what the widget's launcher and
- * header actually use (mirrors widget.js resolveTheme precedence): when the
- * saved chat_theme is touched, the custom.headerBg (or the preset's headerBg)
- * wins; otherwise the legacy theme_color drives the header.
+ * header actually use (mirrors widget.js resolveTheme precedence): a saved
+ * custom.headerBg wins, then the saved preset's headerBg, then the platform
+ * default. There is no legacy theme_color column anymore — every agent is
+ * created with chat_theme baked to the `platform` preset.
  */
-export function agentHeaderColor(agent: {
-  theme_color?: string | null
-  chat_theme?: string | null
-}): string {
+export function agentHeaderColor(agent: { chat_theme?: string | null }): string {
   if (agent.chat_theme) {
     try {
       const saved = JSON.parse(agent.chat_theme) as {
         preset?: string
         custom?: Partial<Record<string, string>>
-        touched?: boolean
       } | null
-      if (saved && typeof saved === 'object' && saved.touched) {
+      if (saved && typeof saved === 'object') {
         if (saved.custom?.headerBg) return saved.custom.headerBg
         const preset = saved.preset ? findPreset(saved.preset) : undefined
-        return preset ? preset.headerBg : defaultTheme().headerBg
+        if (preset) return preset.headerBg
       }
     } catch {
-      /* malformed chat_theme — fall through to theme_color */
+      /* malformed chat_theme — fall through to the platform default */
     }
   }
-  return agent.theme_color || defaultTheme().headerBg
+  return defaultTheme().headerBg
 }
 
 /** The default (monochrome) theme as a plain ChatTheme — safe to mutate. */

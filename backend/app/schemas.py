@@ -34,10 +34,8 @@ class TokenResponse(BaseModel):
 class AgentCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str = ""
-    system_prompt: str | None = None
     persona_prompt: str | None = None
     welcome_message: str = "Hi! How can I help you?"
-    theme_color: str = "#a9502a"
     avatar_emoji: str = "🤖"
     chat_theme: str = ""
     show_thinking: bool = False
@@ -47,10 +45,8 @@ class AgentCreate(BaseModel):
 class AgentUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     description: str | None = None
-    system_prompt: str | None = None
     persona_prompt: str | None = None
     welcome_message: str | None = None
-    theme_color: str | None = None
     avatar_emoji: str | None = None
     chat_theme: str | None = None
     show_thinking: bool | None = None
@@ -64,10 +60,8 @@ class AgentResponse(BaseModel):
     user_id: int
     name: str
     description: str
-    system_prompt: str | None
     persona_prompt: str | None
     welcome_message: str
-    theme_color: str
     avatar_emoji: str
     avatar_url: str | None = None
     avatar_kind: str = "photo"
@@ -93,7 +87,6 @@ class AgentPublicConfig(BaseModel):
     name: str
     description: str
     welcome_message: str
-    theme_color: str
     avatar_emoji: str
     avatar_url: str | None = None
     avatar_kind: str = "photo"
@@ -170,7 +163,11 @@ class CommandResponse(BaseModel):
 
 # --- Usage (dashboard tab) ---
 class UsageLog(BaseModel):
-    """One chat request row in the usage history list."""
+    """One chat request row in the usage history list.
+
+    agent_id/agent_name are filled only by admin (platform-wide) queries;
+    the per-agent dashboard endpoint leaves them null.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -185,6 +182,10 @@ class UsageLog(BaseModel):
     country: str | None
     status: str
     created_at: datetime.datetime
+    # URL of the page where the widget was embedded ("from where it was called").
+    page_url: str | None = None
+    agent_id: int | None = None
+    agent_name: str | None = None
 
 
 class UsagePoint(BaseModel):
@@ -223,3 +224,85 @@ class UsageResponse(BaseModel):
     page: int
     page_size: int
     pages: int
+
+
+# --- Admin (read-only platform monitoring) ---
+class AdminLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class AdminTokenResponse(BaseModel):
+    """Login response for the env-configured platform admin."""
+
+    access_token: str
+    token_type: str = "bearer"
+    email: str
+
+
+class AdminUserRow(BaseModel):
+    """One platform user with aggregated monitoring stats."""
+
+    id: int
+    email: str
+    display_name: str
+    created_at: datetime.datetime
+    agent_count: int = 0
+    total_requests: int = 0
+    total_tokens: int = 0
+    last_active: datetime.datetime | None = None
+
+
+class AdminUsersResponse(BaseModel):
+    """Paginated user list (searchable)."""
+
+    items: list[AdminUserRow]
+    total: int
+    page: int
+    page_size: int
+    pages: int
+
+
+class AdminAgentRow(BaseModel):
+    """One agent of a monitored user, with source + usage stats (read-only)."""
+
+    id: int
+    name: str
+    description: str = ""
+    avatar_emoji: str = "🤖"
+    avatar_url: str | None = None
+    # Needed so admin cards render the avatar with the SAME header color as
+    # the dashboard (agentHeaderColor derives it from chat_theme).
+    chat_theme: str = ""
+    created_at: datetime.datetime
+    source_count: int = 0
+    ready_sources: int = 0
+    total_requests: int = 0
+    total_tokens: int = 0
+    last_active: datetime.datetime | None = None
+
+
+class AdminUserDetail(BaseModel):
+    """Read-only view of one user: profile + their agents."""
+
+    user: AdminUserRow
+    agents: list[AdminAgentRow]
+
+
+class AdminAgentDetail(BaseModel):
+    """Read-only view of one agent (any user) + its owner."""
+
+    agent: AgentResponse
+    user: AdminUserRow
+
+
+class AdminStats(BaseModel):
+    """Platform-wide totals + daily series (all users, all agents)."""
+
+    total_users: int
+    total_agents: int
+    total_requests: int
+    total_input_tokens: int
+    total_output_tokens: int
+    total_tokens: int
+    series: list[UsagePoint]

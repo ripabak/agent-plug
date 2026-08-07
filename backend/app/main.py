@@ -9,7 +9,7 @@ from .agent.checkpointer import close_checkpointer, init_checkpointer
 from .config import CORS_ORIGINS
 from .database import init_db
 from .rag.pipeline import rebuild_all
-from .routers import agents, auth, knowledge, public, threads
+from .routers import admin, agents, auth, knowledge, public, threads
 from .services.health import collect_health
 
 
@@ -35,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(admin.router)
 app.include_router(agents.router)
 app.include_router(knowledge.router)
 app.include_router(threads.router)

@@ -8,6 +8,7 @@ import UsageChart from '@/components/UsageChart.vue'
 import { useAgentsStore } from '@/stores/agents'
 import { useAuthStore } from '@/stores/auth'
 import { PRIMARY, OUTPUT, formatCompact, requestChartData, tokenChartData } from '@/utils/chartjs'
+import { isPageUrl, pageLabel } from '@/utils/usage'
 
 const agentsStore = useAgentsStore()
 const auth = useAuthStore()
@@ -204,6 +205,7 @@ onMounted(load)
                   <th>Time</th>
                   <th>Channel</th>
                   <th>Country</th>
+                  <th>Page</th>
                   <th>Model</th>
                   <th class="num">Input</th>
                   <th class="num">Output</th>
@@ -220,6 +222,17 @@ onMounted(load)
                       >{{ countryFlag(item.country) }} {{ countryName(item.country) }}</template
                     >
                     <template v-else>—</template>
+                  </td>
+                  <td class="usage-page">
+                    <a
+                      v-if="isPageUrl(item.page_url)"
+                      :href="item.page_url"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      :title="item.page_url"
+                      >{{ pageLabel(item.page_url) }}</a
+                    >
+                    <template v-else>{{ pageLabel(item.page_url) }}</template>
                   </td>
                   <td class="usage-model">{{ item.model || '—' }}</td>
                   <td class="num">{{ item.input_tokens.toLocaleString() }}</td>

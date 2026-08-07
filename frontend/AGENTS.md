@@ -24,9 +24,11 @@ frontend/
       types.ts              # API types mirroring backend schemas (Source.kind: url|pdf|text)
     stores/
       auth.ts               # token + user (localStorage 'ap_token'), login/register/bootstrap
+      admin.ts              # platform admin (localStorage 'ap_admin_token'), login/bootstrap
       agents.ts             # agent CRUD + sources for the detail page
       chat.ts               # chat display config: theme + Show thinking/tools (persisted to Agent)
-    views/                  # Login, Register, Dashboard, AgentCreate, AgentDetail
+    views/                  # Login, Register, Dashboard, AgentCreate, AgentDetail,
+                            # AdminLogin, AdminView, AdminUserView, AdminAgentDetailView
     components/             # ConfigureTab, KnowledgeTab (3 input modes), PreviewTab, EmbedTab, StatusBadge
     assets/main.css         # minimal design system (no UI framework)
   public/demo.html          # widget demo page (query params: agent, token, base)
@@ -76,11 +78,15 @@ bun format            # prettier
   from `GET /api/public/agents/{id}/config` (plus optional `data-*` script
   overrides) and renders identically. So: **if the preview is changed, the
   live widget follows automatically** — never add per-widget controls, never
-  store display config only in localStorage. The chat itself (preview header
-  AND widget header) has **no ⚙ settings menu** — the preview panel is the
-  single place to adjust. Shared tokens live in `src/utils/themes.ts`
-  (preview) and the theme object inside `widget.js` (widget) and must stay in
-  sync with the `--chat-*` defaults in `assets/main.css`.
+  store display config only in localStorage. There is NO `theme_color`
+  anymore: agents are created with `chat_theme` baked to the `platform`
+  preset (backend `DEFAULT_CHAT_PRESET`), so the platform theme is the
+  default look; `agentHeaderColor()` derives the header purely from
+  `chat_theme`. The chat itself (preview header AND widget header) has **no ⚙
+  settings menu** — the preview panel is the single place to adjust. Shared
+  tokens live in `src/utils/themes.ts` (preview) and the theme object inside
+  `widget.js` (widget) and must stay in sync with the `--chat-*` defaults in
+  `assets/main.css`.
 - **Knowledge tab**: 3 input modes (🌐 URLs / 📄 PDF / 📝 Text) via the
   `source-modes` switcher; status polling every 3s while any source is
   pending/fetching/indexing.
@@ -89,6 +95,19 @@ bun format            # prettier
   Picking a template fetches the GIF and uploads it through the normal avatar
   pipeline (`PUT /api/agents/{id}/avatar`), so it is compressed to WebP and
   stays animated — no separate backend handling.
+- **Admin console (read-only)**: `/admin/login` -> `/admin` (platform stats,
+  searchable + paginated user list) -> `/admin/users/:id` (read-only view of
+  one user: profile, agent CARDS styled like the dashboard grid, usage
+  history across all their agents) -> `/admin/agents/:id` (read-only mirror
+  of AgentDetailView: Configure fields, Knowledge source list, live widget
+  Preview, Usage charts/history, Embed snippet — no edit controls). The
+  usage history (dashboard + admin) includes a **Page** column showing where
+  the widget was called from (`page_url`, host + path, links out; helpers in
+  `src/utils/usage.ts`). Guarded
+  by `meta.admin` via `useAdminStore` (separate token key `ap_admin_token` —
+  never mixed with the user session). All admin APIs are GET-only; there is
+  no admin mutation UI by design. Reuses the global design system classes
+  (`agent-grid`, `usage-summary`, `usage-table`, `pagination`, etc.).
 - **Testing**: every new store/util/component gets a test under
   `src/**/__tests__/`. Mock `@/api/client` in store/component tests. IMPORTANT:
   the lint rule `vitest/require-mock-type-parameters` requires **typed** mocks —

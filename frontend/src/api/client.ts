@@ -1,6 +1,18 @@
 /** Thin typed fetch wrapper around the Agent-Plug backend API. */
 
-import type { Agent, EmbedResponse, Source, TokenResponse, UsageResponse, User } from './types'
+import type {
+  AdminAgentDetail,
+  AdminStats,
+  AdminTokenResponse,
+  AdminUserDetail,
+  AdminUsersResponse,
+  Agent,
+  EmbedResponse,
+  Source,
+  TokenResponse,
+  UsageResponse,
+  User,
+} from './types'
 
 export const API_BASE: string =
   (import.meta.env.VITE_API_BASE as string | undefined) || 'http://localhost:8000'
@@ -170,4 +182,52 @@ export const api = {
     q.set('page_size', String(params.pageSize ?? 10))
     return request<UsageResponse>(`/api/agents/${agentId}/usage?${q}`, { token })
   },
+
+  // --- admin (read-only platform monitoring) ---
+  adminLogin: (data: { email: string; password: string }) =>
+    request<AdminTokenResponse>('/api/admin/login', { method: 'POST', body: data }),
+  adminMe: (token: string) => request<{ email: string }>('/api/admin/me', { token }),
+  adminStats: (token: string, days = 30) =>
+    request<AdminStats>(`/api/admin/stats?days=${days}`, { token }),
+  adminUsers: (
+    token: string,
+    params: { q?: string; page?: number; pageSize?: number } = {},
+  ) => {
+    const q = new URLSearchParams()
+    if (params.q) q.set('q', params.q)
+    q.set('page', String(params.page ?? 1))
+    q.set('page_size', String(params.pageSize ?? 20))
+    return request<AdminUsersResponse>(`/api/admin/users?${q}`, { token })
+  },
+  adminUserDetail: (token: string, id: number) =>
+    request<AdminUserDetail>(`/api/admin/users/${id}`, { token }),
+  adminUserUsage: (
+    token: string,
+    id: number,
+    params: { page?: number; pageSize?: number } = {},
+  ) => {
+    const q = new URLSearchParams()
+    q.set('page', String(params.page ?? 1))
+    q.set('page_size', String(params.pageSize ?? 10))
+    return request<UsageResponse>(`/api/admin/users/${id}/usage?${q}`, { token })
+  },
+
+  // --- admin: read-only agent drill-down ---
+  adminAgent: (token: string, id: number) =>
+    request<AdminAgentDetail>(`/api/admin/agents/${id}`, { token }),
+  adminAgentSources: (token: string, id: number) =>
+    request<Source[]>(`/api/admin/agents/${id}/sources`, { token }),
+  adminAgentUsage: (
+    token: string,
+    id: number,
+    params: { days?: number; page?: number; pageSize?: number } = {},
+  ) => {
+    const q = new URLSearchParams()
+    if (params.days !== undefined) q.set('days', String(params.days))
+    q.set('page', String(params.page ?? 1))
+    q.set('page_size', String(params.pageSize ?? 10))
+    return request<UsageResponse>(`/api/admin/agents/${id}/usage?${q}`, { token })
+  },
+  adminAgentEmbed: (token: string, id: number) =>
+    request<EmbedResponse>(`/api/admin/agents/${id}/embed`, { token }),
 }

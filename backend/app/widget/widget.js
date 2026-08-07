@@ -125,7 +125,7 @@
   }
 
   var THEME_PRESETS = {
-    monochrome: buildPreset({}),
+    platform: buildPreset({}),
     indigo: buildPreset({ headerBg: '#4f46e5', userBubbleBg: '#4f46e5', btnBg: '#4f46e5', accent: '#4f46e5', accentSoft: '#eef2ff', link: '#2563eb' }),
     emerald: buildPreset({ headerBg: '#059669', userBubbleBg: '#059669', btnBg: '#059669', accent: '#059669', accentSoft: '#d1fae5' }),
     rose: buildPreset({ headerBg: '#e11d48', userBubbleBg: '#e11d48', btnBg: '#e11d48', accent: '#e11d48', accentSoft: '#ffe4e6' }),
@@ -156,9 +156,8 @@
    *   data-theme='{"headerBg":"#f00"}'   → JSON partial overrides
    *   data-chat-header-bg="#f00"         → single-token override
    * Priority: script attributes > agent config chat_theme (from /config) >
-   * defaults. With no theme configured at all, the agent's theme_color drives
-   * the accent family (header/launcher/user bubble/send/accents) — exactly
-   * the legacy look, so existing embeds render identically.
+   * defaults. Fresh agents are created with chat_theme baked to the
+   * `platform` preset, so the platform theme is the default look.
    */
   function resolveTheme() {
     var name = script.getAttribute('data-theme-name');
@@ -189,13 +188,6 @@
       for (var ck in saved.custom) theme[ck] = saved.custom[ck];
     }
     for (var k2 in overrides) theme[k2] = overrides[k2];
-
-    // Legacy fallback: without any configured theme, the agent's theme_color
-    // drives the accent family (header/launcher/user bubble/send/accents).
-    var configured = hasThemeAttrs || (saved && saved.touched);
-    if (!configured && config && config.theme_color) {
-      theme.headerBg = theme.userBubbleBg = theme.btnBg = theme.accent = config.theme_color;
-    }
     return theme;
   }
 
@@ -943,7 +935,7 @@
     })
     .catch(function (err) {
       // Render a launcher that shows the error when clicked (fail gracefully).
-      config = { name: 'Assistant', avatar_emoji: '💬', welcome_message: 'Unable to load assistant.', theme_color: '#4f46e5', description: '' };
+      config = { name: 'Assistant', avatar_emoji: '💬', welcome_message: 'Unable to load assistant.', description: '' };
       injectStyles(resolveTheme());
       var btn = launcher();
       btn.addEventListener('click', function () { alert('Assistant unavailable: ' + err.message); });

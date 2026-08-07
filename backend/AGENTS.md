@@ -76,7 +76,13 @@ ke `postgresql+psycopg://` — override via env jika perlu), `SECRET_KEY`, `CORS
 concurrently server-wide; extra sources queue with status `pending` =
 "Queued" in the dashboard — add endpoints return immediately via
 `BackgroundTasks` and the 3s frontend poll tracks progress),
-`PAGE_CONTEXT_MAX_CHARS=10000` (read_current_page tool truncation). Storage: `STORAGE_BACKEND` (`local`|`s3`),
+`PAGE_CONTEXT_MAX_CHARS=10000` (read_current_page tool truncation),
+`ADMIN_EMAIL` + `ADMIN_PASSWORD` (platform admin — read-only monitoring; empty
+= admin disabled). `DEFAULT_CHAT_PRESET` (default `platform`): the theme
+preset baked into `chat_theme` at agent creation — MUST match a preset name
+in `frontend/src/utils/themes.ts` AND `app/widget/widget.js` (both carry the
+`platform` preset = the warm monochrome brand theme; the legacy `theme_color`
+column is gone). Storage: `STORAGE_BACKEND` (`local`|`s3`),
 `S3_ENDPOINT_URL`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_BUCKET`,
 `S3_PREFIX`, `S3_REGION` (lihat `app/storage/`). Tests set `AP_TESTING=1` + a
 `agent-plug-test` DB (see `tests/conftest.py`). Create both DBs:
@@ -157,6 +163,26 @@ concurrently server-wide; extra sources queue with status `pending` =
   `[Source: …]` marker so the widget renders a citation chip. Tool-call caps
   (ToolCallLimitMiddleware, 5/run) bound abuse. Static pages only —
   JS-rendered SPAs return the HTML shell.
+- **Admin console (read-only monitoring)**: the admin is a SPECIAL principal
+  configured via env (`ADMIN_EMAIL`/`ADMIN_PASSWORD`), NOT a User row — login
+  via `POST /api/admin/login` returns a JWT with `role="admin"` (`sub` =
+  "admin", so regular user endpoints can never accept it). `app/routers/admin.py`
+  is GET-only: `/stats` (platform totals + daily series), `/users` (searchable
+  + paginated, per-user agent/request/token aggregates), `/users/{id}` (user +
+  agents with source/usage stats), `/users/{id}/usage` (history across all of
+  a user's agents, rows tagged with agent_name), `/agents/{id}` (agent +
+  owner), `/agents/{id}/sources`, `/agents/{id}/usage`, `/agents/{id}/embed`
+  (admin-scoped mirrors of the dashboard agent endpoints — the embed needs
+  the public_token, which the admin legitimately holds). Frontend: `/admin` +
+  `/admin/users/:id` + `/admin/agents/:id` (separate `useAdminStore`,
+  localStorage key `ap_admin_token`, router meta `admin`/`adminGuest`).
+  Everything is read-only — no admin mutation endpoints exist.
+- **Usage rows record where the widget was called from**: every run writes an
+  `agent_usage` row with the thread's `page_url` (the widget reports
+  `window.location.href` per message; `record_usage` stores it). The Page
+  column in the dashboard Usage tab and both admin usage tables shows the
+  host + path and links out. Column added via the idempotent ALTER list
+  (`agent_usage ADD COLUMN IF NOT EXISTS page_url`).
 - **Widget parity**: the dashboard preview REUSES the real
   `app/widget/widget.js` (embedded via `PreviewTab.vue`, floating + auto-open
   on desktop through `data-auto-open`; live updates via the

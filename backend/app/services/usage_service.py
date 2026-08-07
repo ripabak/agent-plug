@@ -35,6 +35,7 @@ def spawn_usage_log(
     status: str,
     usage: dict,
     client_ip: str | None = None,
+    page_url: str | None = None,
 ) -> None:
     """Persist a usage row in a detached background task (fire-and-forget).
 
@@ -50,7 +51,16 @@ def spawn_usage_log(
         db = async_session()
         try:
             country = resolve_country(client_ip)
-            await record_usage(db, agent_id, thread_key, user_id, status, usage, country=country)
+            await record_usage(
+                db,
+                agent_id,
+                thread_key,
+                user_id,
+                status,
+                usage,
+                country=country,
+                page_url=page_url,
+            )
         except Exception:
             try:
                 await db.rollback()
@@ -79,6 +89,7 @@ async def record_usage(
     status: str,
     usage: dict,
     country: str | None = None,
+    page_url: str | None = None,
 ) -> None:
     """Persist one usage row for a finished run (never raises).
 
@@ -97,6 +108,7 @@ async def record_usage(
                 total_tokens=int(usage.get("total_tokens") or 0),
                 cost=usage.get("cost"),
                 country=country,
+                page_url=page_url,
                 status=status,
             )
         )
