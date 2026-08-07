@@ -48,11 +48,11 @@ function loadThemeState(): ChatThemeState {
 function loadSettings(): ChatSettings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (raw) return { showThinking: true, showTools: true, ...JSON.parse(raw) }
+    if (raw) return { showThinking: false, showTools: true, ...JSON.parse(raw) }
   } catch {
     /* ignore */
   }
-  return { showThinking: true, showTools: true }
+  return { showThinking: false, showTools: true }
 }
 
 export const useChatStore = defineStore('chat', () => {

@@ -14,15 +14,15 @@
     <div class="lp-win-body">
       <div class="lp-field">
         <span class="lp-field-label">Agent name</span>
-        <span class="lp-input">Meridian Support</span>
+        <span class="lp-input">Senja Coffee</span>
       </div>
       <div class="lp-field">
         <span class="lp-field-label">Description</span>
-        <span class="lp-input">Answers questions about shipping, returns, and products.</span>
+        <span class="lp-input">Answers questions about our menu, opening hours, and location.</span>
       </div>
       <div class="lp-field">
         <span class="lp-field-label">Welcome message</span>
-        <span class="lp-input">Hi! How can I help you?</span>
+        <span class="lp-input">Hi! Ask me anything about the café.</span>
       </div>
       <div class="lp-field" style="margin-bottom: 20px">
         <span class="lp-field-label">Avatar</span>

@@ -119,11 +119,6 @@ const COLOR_GROUPS: ColorGroup[] = [
       { key: 'btnText', label: 'Send button text' },
     ],
   },
-  {
-    title: 'Accent',
-    preview: 'accent',
-    controls: [{ key: 'accent', label: 'Accent color' }],
-  },
 ]
 
 const agentsStore = useAgentsStore()
@@ -294,8 +289,8 @@ function onColorInput(e: Event, c: ColorControl) {
          launcher + panel as the live embed. Auto-opens on desktop; on mobile
          the launcher button (bottom-right) opens it. -->
     <p class="preview-widget-hint">
-      💬 Chat preview = live widget (floating). Auto-opens on desktop; on mobile, tap the launcher
-      at the bottom-right.
+      Chat preview = live widget (floating). Auto-opens on desktop; on mobile, tap the launcher at
+      the bottom-right.
     </p>
     <div ref="widgetHost" class="preview-widget-host" />
   </div>

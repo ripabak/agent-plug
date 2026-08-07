@@ -57,15 +57,16 @@ describe('ColorPreview', () => {
     const thinking = themeWith({ thinkingBg: '#f6f7f9', thinkingText: '#6b7280' })
     const tw = mount(ColorPreview, { props: { kind: 'thinking', theme: thinking } })
     expect(tw.find('.cvp-think').attributes('style')).toContain('background: rgb(246, 247, 249)')
+    // thinking label is plain text (no brain emoji)
+    expect(tw.find('.cvp-think-label').text()).toBe('Reasoning')
 
     const tools = themeWith({
-      aiBubbleBg: '#ffffff',
       toolSuccessBg: '#f0fdf4',
       toolErrorBg: '#fef2f2',
     })
     const ow = mount(ColorPreview, { props: { kind: 'tools', theme: tools } })
-    // the tools bubble follows the AI bubble colors
-    expect(ow.find('.cvp-tools').attributes('style')).toContain('background: rgb(255, 255, 255)')
+    // chips are plain pills, not wrapped in a chat bubble
+    expect(ow.find('.cvp-tools').attributes('style')).toBeUndefined()
     // success + error chips, each referencing its own tokens
     const chips = ow.findAll('.cvp-tool')
     expect(chips.length).toBe(2)

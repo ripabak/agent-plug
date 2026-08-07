@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
-import PlugMark from '../PlugMark.vue'
+import PlugMark from '@/components/PlugMark.vue'
 
 describe('PlugMark', () => {
   it('renders an svg at the requested size', () => {

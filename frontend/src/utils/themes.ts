@@ -71,56 +71,64 @@ export interface ThemePreset extends ChatTheme {
 
 /** Default values — identical to the pre-theming look (and to the widget defaults). */
 const DEFAULT: ChatTheme = {
-  headerBg: '#4f46e5',
-  headerText: '#ffffff',
-  msgsBg: '#f6f7f9',
+  headerBg: '#211f1b',
+  headerText: '#f6f5f1',
+  msgsBg: '#f1efe9',
   aiBubbleBg: '#ffffff',
-  aiBubbleText: '#111827',
-  aiBubbleBorder: '#e5e7eb',
-  userBubbleBg: '#4f46e5',
-  userBubbleText: '#ffffff',
-  thinkingBg: '#f6f7f9',
-  thinkingText: '#6b7280',
-  thinkingBorder: '#e5e7eb',
-  toolsBg: '#f6f7f9',
-  toolsText: '#111827',
-  toolsBorder: '#e5e7eb',
+  aiBubbleText: '#211f1b',
+  aiBubbleBorder: '#e6e3da',
+  userBubbleBg: '#211f1b',
+  userBubbleText: '#f6f5f1',
+  thinkingBg: '#f6f5f1',
+  thinkingText: '#6f6b64',
+  thinkingBorder: '#e6e3da',
+  toolsBg: '#f6f5f1',
+  toolsText: '#211f1b',
+  toolsBorder: '#e6e3da',
   toolBg: '#ffffff',
-  btnBg: '#4f46e5',
-  btnText: '#ffffff',
+  btnBg: '#211f1b',
+  btnText: '#f6f5f1',
   inputBg: '#ffffff',
-  inputBorder: '#d1d5db',
-  inputText: '#111827',
+  inputBorder: '#d6d2c6',
+  inputText: '#211f1b',
   toolbarBg: '#ffffff',
-  toolbarBorder: '#e5e7eb',
-  accent: '#4f46e5',
-  accentSoft: '#eef2ff',
-  muted: '#6b7280',
-  link: '#2563eb',
-  codeBg: '#f1f2f4',
-  preBg: '#f6f7f9',
-  preBorder: '#e5e7eb',
-  tableBorder: '#e5e7eb',
-  blockquoteText: '#4b5563',
-  sourcesLabel: '#374151',
-  toolSuccessText: '#16a34a',
-  toolSuccessBg: '#f0fdf4',
-  toolSuccessBorder: '#bbe7c5',
-  toolErrorText: '#dc2626',
-  toolErrorBg: '#fef2f2',
-  toolErrorBorder: '#fecaca',
-  errBg: '#fef2f2',
-  errText: '#b91c1c',
-  errBorder: '#fecaca',
+  toolbarBorder: '#e6e3da',
+  accent: '#a9502a',
+  accentSoft: '#f4e8de',
+  muted: '#6f6b64',
+  link: '#a9502a',
+  codeBg: '#f1efe9',
+  preBg: '#f6f5f1',
+  preBorder: '#e6e3da',
+  tableBorder: '#e6e3da',
+  blockquoteText: '#45423b',
+  sourcesLabel: '#211f1b',
+  toolSuccessText: '#3c5a39',
+  toolSuccessBg: '#edf3ec',
+  toolSuccessBorder: '#cfe0cc',
+  toolErrorText: '#a3321f',
+  toolErrorBg: '#fdecec',
+  toolErrorBorder: '#f5d0cc',
+  errBg: '#fdecec',
+  errText: '#8d3f1e',
+  errBorder: '#f5d0cc',
 }
 
 function buildPreset(name: string, label: string, overrides: Partial<ChatTheme>): ThemePreset {
   return { ...DEFAULT, ...overrides, name, label }
 }
 
-/** Ready-to-use palettes. `indigo` is the default theme. */
+/** Ready-to-use palettes. `monochrome` is the default (brand) theme. */
 export const THEME_PRESETS: ThemePreset[] = [
-  buildPreset('indigo', 'Indigo', {}),
+  buildPreset('monochrome', 'Monochrome', {}),
+  buildPreset('indigo', 'Indigo', {
+    headerBg: '#4f46e5',
+    userBubbleBg: '#4f46e5',
+    btnBg: '#4f46e5',
+    accent: '#4f46e5',
+    accentSoft: '#eef2ff',
+    link: '#2563eb',
+  }),
   buildPreset('emerald', 'Emerald', {
     headerBg: '#059669',
     userBubbleBg: '#059669',
@@ -195,7 +203,36 @@ export function findPreset(name: string): ThemePreset | undefined {
   return THEME_PRESETS.find((p) => p.name === name)
 }
 
-/** The default (indigo) theme as a plain ChatTheme — safe to mutate. */
+/**
+ * Effective chat header color for an agent — what the widget's launcher and
+ * header actually use (mirrors widget.js resolveTheme precedence): when the
+ * saved chat_theme is touched, the custom.headerBg (or the preset's headerBg)
+ * wins; otherwise the legacy theme_color drives the header.
+ */
+export function agentHeaderColor(agent: {
+  theme_color?: string | null
+  chat_theme?: string | null
+}): string {
+  if (agent.chat_theme) {
+    try {
+      const saved = JSON.parse(agent.chat_theme) as {
+        preset?: string
+        custom?: Partial<Record<string, string>>
+        touched?: boolean
+      } | null
+      if (saved && typeof saved === 'object' && saved.touched) {
+        if (saved.custom?.headerBg) return saved.custom.headerBg
+        const preset = saved.preset ? findPreset(saved.preset) : undefined
+        return preset ? preset.headerBg : defaultTheme().headerBg
+      }
+    } catch {
+      /* malformed chat_theme — fall through to theme_color */
+    }
+  }
+  return agent.theme_color || defaultTheme().headerBg
+}
+
+/** The default (monochrome) theme as a plain ChatTheme — safe to mutate. */
 export function defaultTheme(): ChatTheme {
   const t = {} as ChatTheme
   for (const key of THEME_COLOR_KEYS) t[key] = DEFAULT[key]

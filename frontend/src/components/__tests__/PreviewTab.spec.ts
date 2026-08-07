@@ -57,7 +57,7 @@ describe('PreviewTab floating widget preview', () => {
     expect(s.attributes('data-base-url')).toBe('http://localhost:8000')
     expect(s.attributes('data-auto-open')).toBe('desktop')
     const theme = JSON.parse(s.attributes('data-theme') || '{}')
-    expect(theme.msgsBg).toBe('#f6f7f9')
+    expect(theme.msgsBg).toBe('#f1efe9')
     expect(theme.aiBubbleBg).toBe('#ffffff')
     wrapper.unmount()
   })

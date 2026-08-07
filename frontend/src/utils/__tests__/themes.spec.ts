@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   THEME_COLOR_KEYS,
   THEME_PRESETS,
+  agentHeaderColor,
   applyThemeOverrides,
   cssVarName,
   defaultTheme,
@@ -35,10 +36,10 @@ describe('chat themes', () => {
     }
   })
 
-  it('indigo is the default preset', () => {
-    expect(THEME_PRESETS[0]?.name).toBe('indigo')
-    expect(THEME_PRESETS[0]?.label).toBe('Indigo')
-    expect(defaultTheme().headerBg).toBe('#4f46e5')
+  it('monochrome is the default preset', () => {
+    expect(THEME_PRESETS[0]?.name).toBe('monochrome')
+    expect(THEME_PRESETS[0]?.label).toBe('Monochrome')
+    expect(defaultTheme().headerBg).toBe('#211f1b')
   })
 
   it('findPreset locates presets by name and returns undefined otherwise', () => {
@@ -47,20 +48,62 @@ describe('chat themes', () => {
     expect(findPreset('nope')).toBeUndefined()
   })
 
+  describe('agentHeaderColor', () => {
+    it('falls back to theme_color when no theme is saved', () => {
+      expect(agentHeaderColor({ theme_color: '#ff0000', chat_theme: '' })).toBe('#ff0000')
+      expect(agentHeaderColor({ theme_color: '#ff0000', chat_theme: null })).toBe('#ff0000')
+    })
+
+    it('uses the saved preset header color once the theme is touched', () => {
+      expect(
+        agentHeaderColor({
+          theme_color: '#ff0000',
+          chat_theme: JSON.stringify({ preset: 'emerald', custom: {}, touched: true }),
+        }),
+      ).toBe('#059669')
+    })
+
+    it('lets a custom headerBg override the preset', () => {
+      expect(
+        agentHeaderColor({
+          theme_color: '#ff0000',
+          chat_theme: JSON.stringify({
+            preset: 'emerald',
+            custom: { headerBg: '#123456' },
+            touched: true,
+          }),
+        }),
+      ).toBe('#123456')
+    })
+
+    it('ignores an untouched theme and uses theme_color (reset state)', () => {
+      expect(
+        agentHeaderColor({
+          theme_color: '#ff0000',
+          chat_theme: JSON.stringify({ preset: 'monochrome', custom: {}, touched: false }),
+        }),
+      ).toBe('#ff0000')
+    })
+
+    it('tolerates malformed chat_theme', () => {
+      expect(agentHeaderColor({ theme_color: '#ff0000', chat_theme: 'not-json{' })).toBe('#ff0000')
+    })
+  })
+
   it('applyThemeOverrides merges partial overrides on top of a base theme', () => {
     const t = applyThemeOverrides(defaultTheme(), { headerBg: '#ff0000', muted: '#999999' })
     expect(t.headerBg).toBe('#ff0000')
     expect(t.muted).toBe('#999999')
     // untouched tokens keep the base values
-    expect(t.accent).toBe('#4f46e5')
-    expect(t.userBubbleBg).toBe('#4f46e5')
+    expect(t.accent).toBe('#a9502a')
+    expect(t.userBubbleBg).toBe('#211f1b')
   })
 
   it('themeToCssVars maps camelCase tokens to --chat-* variables', () => {
     const vars = themeToCssVars(defaultTheme())
-    expect(vars['--chat-header-bg']).toBe('#4f46e5')
-    expect(vars['--chat-ai-bubble-text']).toBe('#111827')
-    expect(vars['--chat-tool-success-border']).toBe('#bbe7c5')
+    expect(vars['--chat-header-bg']).toBe('#211f1b')
+    expect(vars['--chat-ai-bubble-text']).toBe('#211f1b')
+    expect(vars['--chat-tool-success-border']).toBe('#cfe0cc')
     expect(Object.keys(vars).length).toBe(THEME_COLOR_KEYS.length)
   })
 

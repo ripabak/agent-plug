@@ -2,21 +2,25 @@
 /**
  * LandingView — the public marketing page for Agent-Plug.
  *
- * Narrative (scroll story): problem (visitors leave) → statistics →
- * solution (an agent that knows your site) → a five-screen tour of the real
- * dashboard (create, feed, theme, embed, go live) → FAQ → CTA.
+ * Narrative (scroll story): the problem (curious visitors leave too soon) →
+ * statistics → the fix (a helper that already knows your business) → a
+ * five-screen tour of the real dashboard (create, teach, style, publish,
+ * done) → FAQ → CTA.
+ *
+ * Copy is deliberately non-technical: it speaks about visitor experience
+ * (staying longer, understanding the business), never about the stack.
  *
  * Aesthetic: warm monochrome editorial (minimalist-ui protocol). Brand mark:
- * the "plug" (brandkit): chat bubble + socket slots = "plug an agent into
- * your website". All motion is IntersectionObserver-driven; nothing uses a
- * scroll listener; prefers-reduced-motion degrades to static.
+ * the "plug" (brandkit): chat bubble + socket slots = "plug a friendly
+ * helper into your website". All motion is IntersectionObserver-driven;
+ * prefers-reduced-motion degrades to static.
  */
 import { computed, onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 
 import '@/assets/landing.css'
 
-import PlugMark from '@/components/landing/PlugMark.vue'
+import PlugMark from '@/components/PlugMark.vue'
 import WidgetMock from '@/components/landing/WidgetMock.vue'
 import LandingFaq from '@/components/landing/LandingFaq.vue'
 import ScreenCreate from '@/components/landing/steps/ScreenCreate.vue'
@@ -35,36 +39,36 @@ useReveal(() => rootEl.value)
 const steps = [
   {
     verb: 'Create',
-    title: 'Name it, set its tone.',
-    body: 'Give the agent a name, a welcome message, and an avatar. This is the first screen of the dashboard.',
+    title: 'Give your helper a name.',
+    body: 'A name, a short greeting, a friendly face. It quickly starts to feel like part of your team.',
     time: '≈ 30 seconds',
     screen: ScreenCreate,
   },
   {
-    verb: 'Feed',
-    title: 'Teach it your knowledge.',
-    body: 'Add URLs, upload a PDF, or paste long text. Each agent keeps its own indexed memory in your database.',
+    verb: 'Teach',
+    title: 'Tell it about your business.',
+    body: 'Add the pages of your website, a document, or a few notes about what you do. That\u2019s all it needs.',
     time: '≈ 45 seconds',
     screen: ScreenKnowledge,
   },
   {
-    verb: 'Theme',
-    title: 'Make it match your brand.',
-    body: 'Pick one of six color presets or set your own colors, and choose whether visitors see the reasoning and tool calls.',
+    verb: 'Style',
+    title: 'Make it feel like yours.',
+    body: 'Pick your colors and decide how much detail it shows. A live preview lets you check before publishing.',
     time: '≈ 20 seconds',
     screen: ScreenTheme,
   },
   {
-    verb: 'Embed',
-    title: 'Copy one line of HTML.',
-    body: 'The snippet is a single script tag. Paste it into your page and the widget appears, bottom right.',
+    verb: 'Publish',
+    title: 'Paste one line into your site.',
+    body: 'One small line of code, as easy as adding a video. The helper appears in the corner of your page.',
     time: '≈ 10 seconds',
     screen: ScreenEmbed,
   },
   {
-    verb: 'Go live',
-    title: 'It answers, with sources.',
-    body: 'Visitors chat with your knowledge around the clock, and every answer cites where it came from.',
+    verb: 'Done',
+    title: 'Visitors get answers on the spot.',
+    body: 'Anyone on your page can ask a question and get a clear answer with the source. No waiting, no phone call.',
     time: 'Instant',
     screen: ScreenLive,
   },
@@ -73,27 +77,27 @@ const steps = [
 const stats = [
   {
     num: '70%',
-    label: 'of checkout carts are abandoned before purchase',
+    label: 'of online shoppers leave before finishing their purchase',
     src: 'Baymard Institute',
   },
   {
     num: '44%',
-    label: 'of online shoppers want live answers while they buy',
+    label: 'of shoppers want their questions answered while they browse',
     src: 'Forrester Research',
   },
   {
     num: '82%',
-    label: 'of customers expect an immediate answer when they ask',
+    label: 'of customers expect an answer the moment they ask',
     src: 'HubSpot Research',
   },
 ]
 
 onMounted(() => {
-  document.title = 'Agent-Plug - Plug an AI agent into your website'
+  document.title = 'Agent-Plug - Friendly answers for your website visitors'
   const meta = document.querySelector<HTMLMetaElement>('meta[name="description"]')
   if (meta)
     meta.content =
-      'Embed a RAG-powered chat agent on any website with one line of HTML. It answers from your own knowledge, with sources.'
+      'Plug a friendly helper into your website. Visitors get instant answers about your business, from your own pages. Set up in minutes.'
 })
 </script>
 
@@ -134,18 +138,19 @@ onMounted(() => {
         <div class="lp-wrap">
           <div class="lp-hero-grid">
             <div class="lp-hero-copy lp-reveal">
-              <p class="lp-eyebrow">AI chat for any website</p>
+              <p class="lp-eyebrow">Friendly answers for your visitors</p>
               <h1 id="lp-hero-title" class="lp-display lp-h1">
-                Plug an <em class="lp-em">AI agent</em> into your website.
+                Plug in a <em class="lp-em">friendly helper</em>.
               </h1>
               <p class="lp-hero-sub">
-                Answer customers instantly from your own knowledge. One line of HTML, no dev team.
+                When visitors have questions, a helper answers right away, in plain words, from what
+                you already wrote about your business.
               </p>
               <div class="lp-hero-cta">
                 <RouterLink class="lp-btn lp-btn-ink lp-btn-lg" to="/register"
                   >Start free</RouterLink
                 >
-                <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#tour">See how it works</a>
+                <a class="lp-btn lp-btn-ghost lp-btn-lg" href="#tour">See it in action</a>
               </div>
             </div>
             <div class="lp-hero-stage lp-reveal" data-stagger>
@@ -158,12 +163,10 @@ onMounted(() => {
       <!-- ------------------------------------------------------ problem -->
       <section id="problem" class="lp-section lp-wrap" aria-labelledby="lp-problem-title">
         <div class="lp-problem-head lp-reveal">
-          <h2 id="lp-problem-title" class="lp-display lp-h2">
-            Visitors ask. Your site goes quiet.
-          </h2>
+          <h2 id="lp-problem-title" class="lp-display lp-h2">Curious visitors leave too soon.</h2>
           <p class="lp-body">
-            Most websites answer nobody. A question at midnight, a comparison before checkout, a
-            policy check in a hurry: the visitor leaves and buys elsewhere.
+            People arrive with questions: what do you offer, what does it cost, how does it work? A
+            quiet website sends them somewhere else.
           </p>
         </div>
 
@@ -182,7 +185,7 @@ onMounted(() => {
         </div>
         <p class="lp-stats-note lp-reveal">
           Figures are from public third-party research (Baymard Institute, Forrester Research,
-          HubSpot Research). Percentages refer to the cited studies and are shown for context.
+          HubSpot Research), shown for context.
         </p>
       </section>
 
@@ -191,11 +194,11 @@ onMounted(() => {
         <div class="lp-solution-grid">
           <div class="lp-reveal">
             <h2 id="lp-solution-title" class="lp-display lp-h2">
-              An agent that already knows your site.
+              A helper that already knows your business.
             </h2>
             <p class="lp-body">
-              Agent-Plug reads the pages, PDFs, and notes you give it, then answers in your voice,
-              with sources.
+              Give it your website, your documents, your notes. It reads them once, then answers
+              visitors in plain words, pointing to the page it used.
             </p>
           </div>
           <div class="lp-feature-rows lp-reveal" data-stagger>
@@ -212,44 +215,48 @@ onMounted(() => {
                     />
                   </svg>
                 </span>
-                Knows your content
-              </div>
-              <p class="lp-feature-desc">URLs, PDFs, and pasted text, indexed per agent.</p>
-            </div>
-            <div class="lp-feature-row">
-              <div class="lp-feature-title">
-                <span class="lp-feature-tick">
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path
-                      d="M2.5 7.4 5.4 10.3 11.5 3.8"
-                      stroke="currentColor"
-                      stroke-width="1.7"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
-                Answers with sources
-              </div>
-              <p class="lp-feature-desc">Every answer links back to the source it came from.</p>
-            </div>
-            <div class="lp-feature-row">
-              <div class="lp-feature-title">
-                <span class="lp-feature-tick">
-                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path
-                      d="M2.5 7.4 5.4 10.3 11.5 3.8"
-                      stroke="currentColor"
-                      stroke-width="1.7"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </span>
-                Streams its reasoning
+                Learns from what you have
               </div>
               <p class="lp-feature-desc">
-                Thinking and tool calls stream in real time; show them or hide them.
+                Your website pages, documents, and notes. Nothing extra to write.
+              </p>
+            </div>
+            <div class="lp-feature-row">
+              <div class="lp-feature-title">
+                <span class="lp-feature-tick">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d="M2.5 7.4 5.4 10.3 11.5 3.8"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                Shows where it got the answer
+              </div>
+              <p class="lp-feature-desc">
+                Every answer points to the page it came from, so visitors can check.
+              </p>
+            </div>
+            <div class="lp-feature-row">
+              <div class="lp-feature-title">
+                <span class="lp-feature-tick">
+                  <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                    <path
+                      d="M2.5 7.4 5.4 10.3 11.5 3.8"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                Quiet in the corner
+              </div>
+              <p class="lp-feature-desc">
+                A small button that opens a chat when visitors need it. No pop-ups, no noise.
               </p>
             </div>
           </div>
@@ -262,11 +269,9 @@ onMounted(() => {
           <div class="lp-tour-head">
             <div class="lp-reveal">
               <p class="lp-eyebrow">How it works</p>
-              <h2 id="lp-tour-title" class="lp-display lp-h2">
-                From zero to answering in about two minutes.
-              </h2>
+              <h2 id="lp-tour-title" class="lp-display lp-h2">Live on your website in minutes.</h2>
               <p class="lp-body lp-tour-summary">
-                Five screens, one flow. This is what the dashboard actually looks like.
+                Five short steps, no manual needed. Here is the whole flow.
               </p>
             </div>
             <div class="lp-tour-meta lp-mono-meta lp-reveal">
@@ -279,7 +284,7 @@ onMounted(() => {
                   stroke-linecap="round"
                 />
               </svg>
-              ≈ 2 min total · 5 screens
+              ≈ 2 min total · 5 steps
             </div>
           </div>
         </div>
@@ -342,8 +347,10 @@ onMounted(() => {
       <section class="lp-section lp-cta" aria-labelledby="lp-cta-title">
         <div class="lp-ambient" aria-hidden="true" />
         <div class="lp-cta-inner lp-wrap lp-reveal">
-          <h2 id="lp-cta-title" class="lp-display lp-h2">Paste it. It's live.</h2>
-          <p class="lp-cta-sub">Start with a free account and plug in your first agent today.</p>
+          <h2 id="lp-cta-title" class="lp-display lp-h2">Make your website friendlier, today.</h2>
+          <p class="lp-cta-sub">
+            Create a free account and plug in your first helper. It takes about two minutes.
+          </p>
           <div class="lp-cta-actions">
             <RouterLink class="lp-btn lp-btn-ink lp-btn-lg" to="/register">Start free</RouterLink>
             <RouterLink class="lp-btn lp-btn-ghost lp-btn-lg" to="/login">Log in</RouterLink>
@@ -361,7 +368,7 @@ onMounted(() => {
               />
               <path d="M5 7V5.5a3 3 0 0 1 6 0V7" stroke="currentColor" stroke-width="1.3" />
             </svg>
-            Free to start · your knowledge stays yours
+            Free to start · your data stays yours
           </div>
         </div>
       </section>
@@ -376,7 +383,7 @@ onMounted(() => {
               <PlugMark :size="22" :decorative="false" />
               <span>Agent-Plug</span>
             </RouterLink>
-            <p class="lp-footer-tag">One snippet. Any website.</p>
+            <p class="lp-footer-tag">Friendly answers for every visitor.</p>
           </div>
           <div>
             <p class="lp-footer-col-title">Product</p>
@@ -390,18 +397,18 @@ onMounted(() => {
             </ul>
           </div>
           <div>
-            <p class="lp-footer-col-title">Built on</p>
+            <p class="lp-footer-col-title">For your visitors</p>
             <ul class="lp-footer-links">
-              <li><span class="lp-footer-link">FastAPI + LangChain</span></li>
-              <li><span class="lp-footer-link">OpenRouter models</span></li>
-              <li><span class="lp-footer-link">PostgreSQL + pgvector</span></li>
-              <li><span class="lp-footer-link">Vue 3</span></li>
+              <li><span class="lp-footer-link">Answers from your own pages</span></li>
+              <li><span class="lp-footer-link">Every answer shows its source</span></li>
+              <li><span class="lp-footer-link">Quiet button, no pop-ups</span></li>
+              <li><span class="lp-footer-link">Works on any website</span></li>
             </ul>
           </div>
         </div>
         <div class="lp-footer-bottom">
           <span>© 2025 Agent-Plug</span>
-          <span>One snippet. Any website.</span>
+          <span>Friendly answers for every visitor.</span>
         </div>
       </div>
     </footer>

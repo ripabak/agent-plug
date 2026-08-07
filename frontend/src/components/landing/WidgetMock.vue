@@ -11,7 +11,7 @@
  * it mirrors the real product so the landing story stays truthful.
  */
 import { onBeforeUnmount, onMounted, ref } from 'vue'
-import PlugMark from './PlugMark.vue'
+import PlugMark from '@/components/PlugMark.vue'
 
 interface Planned {
   kind: 'user' | 'bot' | 'thinking' | 'tools' | 'sources'
@@ -21,31 +21,31 @@ interface Planned {
 }
 
 const BRIEF: Planned[] = [
-  { kind: 'user', text: 'Do you ship to Indonesia?', delay: 500 },
-  { kind: 'thinking', text: 'looking up shipping policy', delay: 420 },
-  { kind: 'tools', text: 'search_knowledge_base', delay: 380 },
+  { kind: 'user', text: 'Do you have anything gluten-free?', delay: 500 },
+  { kind: 'thinking', text: 'checking the menu and dietary notes', delay: 420 },
+  { kind: 'tools', text: 'checks the menu', delay: 380 },
   {
     kind: 'bot',
-    full: 'Yes. We ship worldwide. Orders over $75 ship free; standard delivery to Indonesia takes 7 to 10 business days.',
+    full: 'Yes! The almond cake and the harvest bowl are both gluten-free. They are marked with a small leaf icon on the menu.',
     delay: 300,
   },
 ]
 
 const FULL: Planned[] = [
-  { kind: 'user', text: 'Do you ship to Indonesia?', delay: 400 },
-  { kind: 'thinking', text: 'checking shipping policy and FAQ', delay: 400 },
-  { kind: 'tools', text: 'search_knowledge_base', delay: 340 },
+  { kind: 'user', text: 'Do you have anything gluten-free?', delay: 400 },
+  { kind: 'thinking', text: 'checking the menu and dietary notes', delay: 400 },
+  { kind: 'tools', text: 'checks the menu', delay: 340 },
   {
     kind: 'bot',
-    full: 'Yes, we ship worldwide. Orders over $75 ship free; standard delivery to Indonesia takes 7 to 10 business days.',
+    full: 'Yes! The almond cake and the harvest bowl are both gluten-free. They are marked with a small leaf icon on the menu.',
     delay: 300,
   },
-  { kind: 'sources', text: 'shipping-policy / faq', delay: 260 },
-  { kind: 'user', text: 'Can I return a used item?', delay: 700 },
-  { kind: 'thinking', text: 'checking returns policy', delay: 360 },
+  { kind: 'sources', text: 'our menu / dietary notes', delay: 260 },
+  { kind: 'user', text: 'Are you open on Sundays?', delay: 700 },
+  { kind: 'thinking', text: 'checking opening hours', delay: 360 },
   {
     kind: 'bot',
-    full: 'Returns are accepted within 30 days of delivery. Items must be unused and in original packaging; we email you a prepaid label.',
+    full: 'We open at 9am on Sundays and close at 6pm. The kitchen takes its last order at 5:30pm.',
     delay: 300,
   },
 ]
@@ -165,8 +165,8 @@ onBeforeUnmount(() => {
     <div class="lp-widget-head">
       <span class="lp-widget-avatar"><PlugMark :size="17" /></span>
       <span class="lp-widget-titles">
-        <span class="lp-widget-name">Meridian Supply Co.</span>
-        <span class="lp-widget-sub">Shipping, returns, and product help</span>
+        <span class="lp-widget-name">Senja Coffee</span>
+        <span class="lp-widget-sub">Menu, opening hours, and location</span>
       </span>
       <span class="lp-widget-close">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
@@ -210,8 +210,8 @@ onBeforeUnmount(() => {
 
         <div v-else class="lp-wm-sources">
           <div class="lp-wm-sources-label">Sources</div>
-          <a class="lp-wm-source" href="#" @click.prevent>[1] shipping-policy</a>
-          <a class="lp-wm-source" href="#" @click.prevent>[2] faq</a>
+          <a class="lp-wm-source" href="#" @click.prevent>[1] our menu</a>
+          <a class="lp-wm-source" href="#" @click.prevent>[2] dietary notes</a>
         </div>
       </template>
     </div>

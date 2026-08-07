@@ -36,10 +36,10 @@ class AgentCreate(BaseModel):
     description: str = ""
     system_prompt: str | None = None
     welcome_message: str = "Hi! How can I help you?"
-    theme_color: str = "#4f46e5"
+    theme_color: str = "#a9502a"
     avatar_emoji: str = "🤖"
     chat_theme: str = ""
-    show_thinking: bool = True
+    show_thinking: bool = False
     show_tools: bool = True
 
 

@@ -79,7 +79,7 @@ describe('chat display-config store', () => {
     expect(chat.themeColors.toolSuccessBg).toBe('rgba(22, 163, 74, 0.12)')
     expect(chat.themeCustomized).toBe(true)
     // untouched tokens keep the preset values
-    expect(chat.themeColors.headerBg).toBe('#4f46e5')
+    expect(chat.themeColors.headerBg).toBe('#211f1b')
   })
 
   it('persists theme preset + custom color overrides across reloads', () => {
@@ -102,7 +102,7 @@ describe('chat display-config store', () => {
 
     reloaded.resetTheme()
     expect(reloaded.themeCustomized).toBe(false)
-    expect(reloaded.themeColors.headerBg).toBe('#4f46e5')
+    expect(reloaded.themeColors.headerBg).toBe('#211f1b')
   })
 
   it('persists Show thinking/Show tools toggles across reloads', () => {

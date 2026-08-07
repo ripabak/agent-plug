@@ -7,6 +7,8 @@ import KnowledgeTab from '@/components/KnowledgeTab.vue'
 import PreviewTab from '@/components/PreviewTab.vue'
 import EmbedTab from '@/components/EmbedTab.vue'
 import UsageTab from '@/components/UsageTab.vue'
+import PlugMark from '@/components/PlugMark.vue'
+import { agentHeaderColor } from '@/utils/themes'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +17,11 @@ const agentsStore = useAgentsStore()
 const agentId = computed(() => Number(route.params.id))
 const error = ref('')
 const showCreatedHint = ref(false)
+
+/** Background for the agent avatar — the same header color the widget button uses. */
+const headerColor = computed(() =>
+  agentsStore.current ? agentHeaderColor(agentsStore.current) : 'var(--bg)',
+)
 
 type Tab = 'configure' | 'knowledge' | 'preview' | 'usage' | 'embed'
 const tabs: { key: Tab; label: string }[] = [
@@ -53,7 +60,7 @@ onMounted(async () => {
   <div class="page">
     <div class="topbar">
       <RouterLink to="/dashboard" class="brand"
-        ><span class="logo-mark">🤖</span> Agent-Plug</RouterLink
+        ><span class="logo-mark"><PlugMark :size="17" /></span> Agent-Plug</RouterLink
       >
       <RouterLink to="/dashboard" class="btn btn-ghost btn-sm">← All agents</RouterLink>
     </div>
@@ -66,13 +73,10 @@ onMounted(async () => {
             v-if="agentsStore.current.avatar_url"
             :src="agentsStore.current.avatar_url"
             class="agent-avatar"
+            :style="{ background: headerColor }"
             alt=""
           />
-          <span
-            v-else
-            class="agent-avatar"
-            :style="{ background: agentsStore.current.theme_color + '22' }"
-          >
+          <span v-else class="agent-avatar" :style="{ background: headerColor }">
             {{ agentsStore.current.avatar_emoji }}
           </span>
           <div class="agent-head-info">
@@ -83,8 +87,24 @@ onMounted(async () => {
       </div>
 
       <div v-if="showCreatedHint" class="hint">
-        ✅ Agent created! Now add your website URLs to the knowledge base — the agent will answer
-        from them once indexing finishes.
+        <svg
+          width="13"
+          height="13"
+          viewBox="0 0 14 14"
+          fill="none"
+          aria-hidden="true"
+          style="vertical-align: -2px; margin-right: 6px"
+        >
+          <path
+            d="M2.5 7.4 5.4 10.3 11.5 3.8"
+            stroke="currentColor"
+            stroke-width="1.7"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        Agent created! Now add your website pages to the knowledge base, and the helper answers from
+        them once it finishes reading.
       </div>
 
       <div class="tabs">

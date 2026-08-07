@@ -14,32 +14,32 @@ interface FaqItem {
 
 const items: FaqItem[] = [
   {
-    q: 'What does my agent know?',
-    a: 'Only what you give it. Feed it URLs, PDFs, or pasted text, and it keeps its own indexed memory. Every answer comes back with the source it was drawn from.',
+    q: 'What does my helper know?',
+    a: 'Only what you teach it: your website pages, documents, or notes. It answers from those, and shows the page it used.',
   },
   {
-    q: 'Do I need to write code?',
-    a: 'One line. The embed snippet is a single script tag. Everything else, from the welcome message to the theme, is configured in the dashboard.',
+    q: 'Do I need to know how to code?',
+    a: 'No. One line of HTML, as easy as pasting a video into your site. Everything else is done with clicks.',
   },
   {
-    q: 'Where do visitor conversations go?',
-    a: 'Widget chats are per visitor and ephemeral on page reload, so a site never accumulates private history. Conversations started from your dashboard are stored and stay yours.',
+    q: 'Does this replace my customer service team?',
+    a: 'No. It answers the everyday questions so visitors stay on your page and get unstuck. Anything complex or personal still goes to your team, exactly as before.',
   },
   {
     q: 'Can it match my brand?',
-    a: 'Yes. Name, avatar, welcome message, six color presets, custom colors, and toggles to show or hide the agent\u2019s reasoning and tool calls.',
+    a: 'Yes: name, greeting, avatar, colors, and how much detail it shows. A live preview lets you check everything before you publish.',
   },
   {
-    q: 'How does it answer?',
-    a: 'It retrieves from your indexed knowledge, then a reasoning agent built on LangChain and OpenRouter models writes the answer and cites its sources.',
+    q: 'Where do visitor conversations go?',
+    a: 'Chats on your website are private per visitor and cleared when the page reloads. Conversations you start from your dashboard are kept for you.',
   },
   {
-    q: 'Is my data private?',
-    a: 'Your knowledge lives in your own PostgreSQL database and object storage. Each agent\u2019s vectors sit in a separate collection, and the widget talks to the backend through a per-agent public token.',
+    q: 'Is my information safe?',
+    a: 'Your materials stay in your own database. Each helper works only with what you gave it, and nothing is shared with other users.',
   },
   {
-    q: 'How fast is setup?',
-    a: 'About two minutes: create the agent, add knowledge, copy the snippet. No credit card, no dev team, nothing to install.',
+    q: 'How long does setup take?',
+    a: 'About two minutes: create, teach, publish. No credit card to start.',
   },
 ]
 

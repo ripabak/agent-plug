@@ -57,7 +57,7 @@ class Agent(Base):
     description: Mapped[str] = mapped_column(Text, default="")
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     welcome_message: Mapped[str] = mapped_column(String, default="Hi! How can I help you?")
-    theme_color: Mapped[str] = mapped_column(String, default="#4f46e5")
+    theme_color: Mapped[str] = mapped_column(String, default="#a9502a")
     avatar_emoji: Mapped[str] = mapped_column(String, default="🤖")
     # Storage key of the compressed avatar image (avatars/{agent_id}.webp);
     # None = fall back to avatar_emoji.
@@ -88,7 +88,7 @@ class Agent(Base):
     # matching the frontend ChatThemeState; show_thinking/show_tools are the
     # client-side display toggles (the widget no longer adjusts them itself).
     chat_theme: Mapped[str] = mapped_column(Text, default="")
-    show_thinking: Mapped[bool] = mapped_column(Boolean, default=True)
+    show_thinking: Mapped[bool] = mapped_column(Boolean, default=False)
     show_tools: Mapped[bool] = mapped_column(Boolean, default=True)
     public_token: Mapped[str] = mapped_column(
         String, unique=True, nullable=False, index=True

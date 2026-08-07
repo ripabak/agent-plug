@@ -88,7 +88,7 @@ html {
   border-radius: 3px;
 }
 
-.lp a {
+.lp a:not(.lp-btn) {
   color: inherit;
   text-decoration: none;
 }
@@ -575,6 +575,7 @@ html {
   align-items: flex-start;
   padding: 40px 0;
   align-self: start;
+  min-width: 0;
 }
 
 /* ------------------------------------------------- faux window chrome */
@@ -1090,6 +1091,9 @@ html {
 .lp-widget-titles {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
 }
 
 .lp-widget-name {
@@ -1358,6 +1362,7 @@ html {
   flex: none;
   width: 22px;
   height: 22px;
+  margin-right: 5px; /* keep the rotated square inside the viewport */
   border: 1px solid var(--lp-border-strong);
   border-radius: 5px;
   display: flex;
@@ -1622,6 +1627,25 @@ html {
   .lp-browser-launcher {
     position: static;
     margin: -50px 0 0 auto;
+  }
+}
+
+/* very narrow phones: keep the primary CTA, drop the ghost login button */
+@media (max-width: 430px) {
+  .lp-nav-cta .lp-btn-ghost {
+    display: none;
+  }
+
+  .lp-brand {
+    font-size: 14.5px;
+  }
+
+  .lp-nav-inner {
+    gap: 14px;
+  }
+
+  .lp-tour-head {
+    gap: 24px;
   }
 }
 

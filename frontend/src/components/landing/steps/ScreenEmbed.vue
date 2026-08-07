@@ -52,12 +52,12 @@ const snippet =
           />
           <path d="M9 2.5v4h4" stroke="currentColor" stroke-width="1.3" />
         </svg>
-        Paste into your site's <span style="color: var(--lp-ink-2)">&lt;body&gt;</span>
+        Paste this into your website, anywhere on the page
       </div>
     </div>
     <div class="lp-win-foot">
       <span class="lp-mono-meta" style="color: var(--lp-muted)"
-        >Floating button · no framework needed</span
+        >Floating button · works on any website</span
       >
       <span class="lp-chip lp-chip-accent">Live in seconds</span>
     </div>

@@ -8,7 +8,7 @@ describe('LandingFaq', () => {
     const wrapper = mount(LandingFaq)
     const buttons = wrapper.findAll('.lp-faq-q')
     expect(buttons.length).toBeGreaterThanOrEqual(6)
-    expect(buttons[0]!.text()).toContain('What does my agent know?')
+    expect(buttons[0]!.text()).toContain('What does my helper know?')
     // answers exist in the DOM (first item open by default)
     expect(wrapper.findAll('.lp-faq-a').length).toBe(buttons.length)
   })

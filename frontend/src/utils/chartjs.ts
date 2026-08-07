@@ -107,7 +107,7 @@ export function usageChartOptions(labelCount: number, maxValue?: number): ChartO
         stacked: true, // tokens chart stacks Input+Output into one bar per day
         grid: { display: false },
         ticks: {
-          color: '#9ca3af',
+          color: '#8f8a80',
           font: { size: 10 },
           maxRotation: 0,
           autoSkip: true,
@@ -127,7 +127,7 @@ export function usageChartOptions(labelCount: number, maxValue?: number): ChartO
         max: maxValue && maxValue > 0 ? maxValue : undefined,
         grid: { color: 'rgba(0, 0, 0, 0.05)' },
         ticks: {
-          color: '#9ca3af',
+          color: '#8f8a80',
           font: { size: 10 },
           callback: (value) => formatCompact(Number(value)),
         },

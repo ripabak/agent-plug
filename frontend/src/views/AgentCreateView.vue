@@ -3,6 +3,7 @@ import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAgentsStore } from '@/stores/agents'
 import AvatarPicker from '@/components/AvatarPicker.vue'
+import PlugMark from '@/components/PlugMark.vue'
 
 const agentsStore = useAgentsStore()
 const router = useRouter()
@@ -35,7 +36,7 @@ async function submit() {
   <div class="page page-narrow">
     <div class="topbar">
       <RouterLink to="/dashboard" class="brand"
-        ><span class="logo-mark">🤖</span> Agent-Plug</RouterLink
+        ><span class="logo-mark"><PlugMark :size="17" /></span> Agent-Plug</RouterLink
       >
       <RouterLink to="/dashboard" class="btn btn-ghost btn-sm">← Back</RouterLink>
     </div>
@@ -43,7 +44,8 @@ async function submit() {
     <div class="card">
       <h1 style="margin-top: 0">Create an agent</h1>
       <div class="hint">
-        <strong>3 steps:</strong> name your agent → add your URLs (knowledge) → preview & embed.
+        <strong>3 steps:</strong> name your agent → add your pages (knowledge) → preview &amp;
+        embed.
       </div>
       <div v-if="error" class="error-box">{{ error }}</div>
       <form @submit.prevent="submit">

@@ -189,28 +189,78 @@ async function addText() {
       <div v-if="error" class="error-box">{{ error }}</div>
       <div v-if="notice" class="hint">{{ notice }}</div>
 
-      <!-- input mode switcher -->
       <div class="source-modes">
         <button
           class="source-mode"
           :class="{ active: inputMode === 'url' }"
           @click="inputMode = 'url'"
         >
-          🌐 URLs
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+            style="vertical-align: -2px; margin-right: 5px"
+          >
+            <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.4" />
+            <path
+              d="M2.5 8h11M8 2c2 1.6 3 3.6 3 6s-1 4.4-3 6c-2-1.6-3-3.6-3-6s1-4.4 3-6Z"
+              stroke="currentColor"
+              stroke-width="1.4"
+            />
+          </svg>
+          URLs
         </button>
         <button
           class="source-mode"
           :class="{ active: inputMode === 'pdf' }"
           @click="inputMode = 'pdf'"
         >
-          📄 PDF
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+            style="vertical-align: -2px; margin-right: 5px"
+          >
+            <path
+              d="M3 2.5h6l4 4v7H3v-11Z"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M9 2.5v4h4M5 8.5h6M5 11h4"
+              stroke="currentColor"
+              stroke-width="1.4"
+              stroke-linecap="round"
+            />
+          </svg>
+          PDF
         </button>
         <button
           class="source-mode"
           :class="{ active: inputMode === 'text' }"
           @click="inputMode = 'text'"
         >
-          📝 Text
+          <svg
+            width="13"
+            height="13"
+            viewBox="0 0 16 16"
+            fill="none"
+            aria-hidden="true"
+            style="vertical-align: -2px; margin-right: 5px"
+          >
+            <path
+              d="M3 3h10M3 6.5h10M3 10h7M3 13h5"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+            />
+          </svg>
+          Text
         </button>
       </div>
 
@@ -242,7 +292,22 @@ async function addText() {
           @dragleave="dragOver = false"
           @drop.prevent="onDrop"
         >
-          <div class="upload-zone-icon">📄</div>
+          <div class="upload-zone-icon">
+            <svg width="26" height="26" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path
+                d="M3 2.5h6l4 4v7H3v-11Z"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M9 2.5v4h4M5 8.5h6M5 11h4"
+                stroke="currentColor"
+                stroke-width="1.4"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
           <div>
             <strong>{{ uploading ? 'Uploading…' : 'Upload PDFs' }}</strong>
             <div class="muted" style="font-size: 12px">
@@ -319,11 +384,9 @@ async function addText() {
         <div v-for="s in agentsStore.sources" :key="s.id" class="row">
           <div class="row-main">
             <div class="row-title">
-              <span v-if="s.kind === 'pdf'" class="kind-badge" title="PDF file">📄 PDF</span>
-              <span v-else-if="s.kind === 'text'" class="kind-badge" title="Pasted text"
-                >📝 TEXT</span
-              >
-              <span v-else class="kind-badge" title="Web page">🌐 URL</span>
+              <span v-if="s.kind === 'pdf'" class="kind-badge" title="PDF file">PDF</span>
+              <span v-else-if="s.kind === 'text'" class="kind-badge" title="Pasted text">TEXT</span>
+              <span v-else class="kind-badge" title="Web page">URL</span>
               <a
                 v-if="s.kind === 'pdf'"
                 class="doc-link"

@@ -91,7 +91,7 @@ function fmtTime(iso: string): string {
 }
 
 function channelLabel(channel: UsageLog['channel']): string {
-  return channel === 'widget' ? '🌐 Widget' : '🖥️ Preview'
+  return channel === 'widget' ? 'Widget' : 'Preview'
 }
 
 function statusClass(status: UsageLog['status']): string {

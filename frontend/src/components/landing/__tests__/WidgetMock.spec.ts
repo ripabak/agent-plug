@@ -17,7 +17,7 @@ describe('WidgetMock', () => {
   it('renders the widget chrome (header, name, toolbar)', () => {
     const wrapper = mount(WidgetMock, { props: { mode: 'brief' } })
     expect(wrapper.find('.lp-widget').exists()).toBe(true)
-    expect(wrapper.find('.lp-widget-name').text()).toBe('Meridian Supply Co.')
+    expect(wrapper.find('.lp-widget-name').text()).toBe('Senja Coffee')
     expect(wrapper.find('.lp-widget-toolbar').exists()).toBe(true)
   })
 
@@ -31,6 +31,6 @@ describe('WidgetMock', () => {
     expect(wrapper.findAll('.lp-wm-think').length).toBe(2)
     expect(wrapper.findAll('.lp-wm-tool').length).toBe(1)
     expect(wrapper.findAll('.lp-wm-sources').length).toBe(1)
-    expect(bubbles.some((b) => b.text().includes('Indonesia'))).toBe(true)
+    expect(bubbles.some((b) => b.text().includes('gluten-free'))).toBe(true)
   })
 })

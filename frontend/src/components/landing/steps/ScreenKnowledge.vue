@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /** Step 2 screen — mirrors the real knowledge tab (KnowledgeTab): three
- *  input modes (URL / PDF / text) plus indexed source rows. */
+ *  input modes (web pages / PDF / notes) plus ready source rows. */
 </script>
 
 <template>
@@ -19,8 +19,8 @@
         <span class="lp-mode">Text</span>
       </div>
       <div class="lp-field" style="margin-bottom: 0">
-        <span class="lp-field-label">Add a web page</span>
-        <span class="lp-input mono">https://meridian.co/shipping-policy</span>
+        <span class="lp-field-label">Add a page from your website</span>
+        <span class="lp-input mono">senja.coffee/menu</span>
       </div>
 
       <div class="lp-src-list">
@@ -35,7 +35,7 @@
               />
             </svg>
           </span>
-          <span class="lp-src-name">meridian.co/shipping-policy</span>
+          <span class="lp-src-name">senja.coffee/menu</span>
           <span class="lp-chip lp-chip-good">
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
@@ -46,7 +46,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            Indexed
+            Ready
           </span>
         </div>
         <div class="lp-src-row">
@@ -60,7 +60,7 @@
               />
             </svg>
           </span>
-          <span class="lp-src-name">meridian.co/returns</span>
+          <span class="lp-src-name">senja.coffee/opening-hours</span>
           <span class="lp-chip lp-chip-good">
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
@@ -71,7 +71,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            Indexed
+            Ready
           </span>
         </div>
         <div class="lp-src-row">
@@ -91,7 +91,7 @@
               />
             </svg>
           </span>
-          <span class="lp-src-name">product-guide.pdf</span>
+          <span class="lp-src-name">our-story.pdf</span>
           <span class="lp-chip lp-chip-good">
             <svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">
               <path
@@ -102,7 +102,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            Indexed
+            Ready
           </span>
         </div>
         <div class="lp-src-row" style="border-bottom: none">
@@ -116,14 +116,13 @@
               />
             </svg>
           </span>
-          <span class="lp-src-name" style="color: var(--lp-muted)">Add another source</span>
-          <span class="lp-chip lp-chip-muted">URL / PDF / text</span>
+          <span class="lp-src-name" style="color: var(--lp-muted)">Add another page</span>
+          <span class="lp-chip lp-chip-muted">Pages / files / notes</span>
         </div>
       </div>
     </div>
     <div class="lp-win-foot">
-      <span class="lp-mono-meta" style="color: var(--lp-muted)">3 sources · vectors ready</span>
-      <span class="lp-chip lp-chip-accent">Reindex on change</span>
+      <span class="lp-mono-meta" style="color: var(--lp-muted)">3 pages · ready to answer</span>
     </div>
   </div>
 </template>

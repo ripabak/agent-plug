@@ -21,9 +21,9 @@ function mountLanding() {
 describe('LandingView', () => {
   it('renders the hero value proposition', () => {
     const wrapper = mountLanding()
-    expect(wrapper.find('h1').text()).toContain('Plug an AI agent into your website')
+    expect(wrapper.find('h1').text()).toContain('Plug in a friendly helper')
     expect(wrapper.find('.lp-hero-cta').text()).toContain('Start free')
-    expect(wrapper.text()).toContain('AI chat for any website')
+    expect(wrapper.text()).toContain('Friendly answers for your visitors')
   })
 
   it('tells the scroll story: problem stats, solution, tour, FAQ, CTA', () => {
@@ -31,16 +31,16 @@ describe('LandingView', () => {
     const text = wrapper.text()
     expect(text).toContain('70%')
     expect(text).toContain('Baymard Institute')
-    expect(text).toContain('An agent that already knows your site')
-    expect(text).toContain('From zero to answering in about two minutes')
+    expect(text).toContain('A helper that already knows your business')
+    expect(text).toContain('Live on your website in minutes')
     expect(text).toContain('Questions, answered.')
-    expect(text).toContain("Paste it. It's live.")
+    expect(text).toContain('Make your website friendlier, today.')
   })
 
   it('renders all five tour steps with their screens', () => {
     const wrapper = mountLanding()
     const verbs = wrapper.findAll('.lp-step-verb').map((v) => v.text().trim())
-    expect(verbs).toEqual(['Create', 'Feed', 'Theme', 'Embed', 'Go live'])
+    expect(verbs).toEqual(['Create', 'Teach', 'Style', 'Publish', 'Done'])
     // each step mounts its screen (create / knowledge / theme / embed / live)
     expect(wrapper.findAll('.lp-win').length).toBe(4)
     expect(wrapper.find('.lp-browser').exists()).toBe(true)
@@ -50,6 +50,6 @@ describe('LandingView', () => {
     const wrapper = mountLanding()
     const answers = wrapper.findAll('.lp-faq-a')
     expect(answers.length).toBeGreaterThanOrEqual(6)
-    expect(wrapper.text()).toContain('How fast is setup?')
+    expect(wrapper.text()).toContain('How long does setup take?')
   })
 })

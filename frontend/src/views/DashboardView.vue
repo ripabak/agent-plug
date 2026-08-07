@@ -3,6 +3,8 @@ import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useAgentsStore } from '@/stores/agents'
+import PlugMark from '@/components/PlugMark.vue'
+import { agentHeaderColor } from '@/utils/themes'
 
 const auth = useAuthStore()
 const agentsStore = useAgentsStore()
@@ -26,7 +28,9 @@ function logout() {
 <template>
   <div class="page">
     <div class="topbar">
-      <span class="brand"><span class="logo-mark">🤖</span> Agent-Plug</span>
+      <span class="brand"
+        ><span class="logo-mark"><PlugMark :size="17" /></span> Agent-Plug</span
+      >
       <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap">
         <span class="muted">Hi, {{ auth.user?.display_name }}</span>
         <button class="btn btn-ghost btn-sm" @click="logout">Log out</button>
@@ -47,8 +51,14 @@ function logout() {
         :to="`/agents/${a.id}?tab=knowledge`"
         class="card agent-card"
       >
-        <img v-if="a.avatar_url" :src="a.avatar_url" class="agent-avatar" alt="" />
-        <span v-else class="agent-avatar" :style="{ background: a.theme_color + '22' }">{{
+        <img
+          v-if="a.avatar_url"
+          :src="a.avatar_url"
+          class="agent-avatar"
+          :style="{ background: agentHeaderColor(a) }"
+          alt=""
+        />
+        <span v-else class="agent-avatar" :style="{ background: agentHeaderColor(a) }">{{
           a.avatar_emoji
         }}</span>
         <h3>{{ a.name }}</h3>
@@ -60,7 +70,16 @@ function logout() {
         class="card agent-card"
         style="border-style: dashed; text-align: center"
       >
-        <span class="agent-avatar" style="background: var(--bg); font-size: 26px">＋</span>
+        <span class="agent-avatar" style="background: var(--bg)">
+          <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M8 3v10M3 8h10"
+              stroke="currentColor"
+              stroke-width="1.6"
+              stroke-linecap="round"
+            />
+          </svg>
+        </span>
         <h3>New Agent</h3>
         <p>Create your first AI agent</p>
       </RouterLink>

@@ -78,7 +78,7 @@
   // Display settings (Thinking / Tools) — come from the agent config fetched
   // via /config (set from the dashboard preview). The widget has no ⚙ menu:
   // everything is configured in the preview panel only.
-  var opts = { showThinking: true, showTools: true };
+  var opts = { showThinking: false, showTools: true };
 
   // ------------------------------------------------------------------ themes
   // Color tokens shared with the dashboard preview
@@ -97,20 +97,20 @@
   ];
 
   var DEFAULT_THEME = {
-    headerBg: '#4f46e5', headerText: '#ffffff', msgsBg: '#f6f7f9',
-    aiBubbleBg: '#ffffff', aiBubbleText: '#111827', aiBubbleBorder: '#e5e7eb',
-    userBubbleBg: '#4f46e5', userBubbleText: '#ffffff',
-    thinkingBg: '#f6f7f9', thinkingText: '#6b7280', thinkingBorder: '#e5e7eb',
-    toolsBg: '#f6f7f9', toolsText: '#111827', toolsBorder: '#e5e7eb', toolBg: '#ffffff',
-    btnBg: '#4f46e5', btnText: '#ffffff',
-    inputBg: '#ffffff', inputBorder: '#d1d5db', inputText: '#111827',
-    toolbarBg: '#ffffff', toolbarBorder: '#e5e7eb',
-    accent: '#4f46e5', accentSoft: '#eef2ff', muted: '#6b7280', link: '#2563eb',
-    codeBg: '#f1f2f4', preBg: '#f6f7f9', preBorder: '#e5e7eb', tableBorder: '#e5e7eb',
-    blockquoteText: '#4b5563', sourcesLabel: '#374151',
-    toolSuccessText: '#16a34a', toolSuccessBg: '#f0fdf4', toolSuccessBorder: '#bbe7c5',
-    toolErrorText: '#dc2626', toolErrorBg: '#fef2f2', toolErrorBorder: '#fecaca',
-    errBg: '#fef2f2', errText: '#b91c1c', errBorder: '#fecaca'
+    headerBg: '#211f1b', headerText: '#f6f5f1', msgsBg: '#f1efe9',
+    aiBubbleBg: '#ffffff', aiBubbleText: '#211f1b', aiBubbleBorder: '#e6e3da',
+    userBubbleBg: '#211f1b', userBubbleText: '#f6f5f1',
+    thinkingBg: '#f6f5f1', thinkingText: '#6f6b64', thinkingBorder: '#e6e3da',
+    toolsBg: '#f6f5f1', toolsText: '#211f1b', toolsBorder: '#e6e3da', toolBg: '#ffffff',
+    btnBg: '#211f1b', btnText: '#f6f5f1',
+    inputBg: '#ffffff', inputBorder: '#d6d2c6', inputText: '#211f1b',
+    toolbarBg: '#ffffff', toolbarBorder: '#e6e3da',
+    accent: '#a9502a', accentSoft: '#f4e8de', muted: '#6f6b64', link: '#a9502a',
+    codeBg: '#f1efe9', preBg: '#f6f5f1', preBorder: '#e6e3da', tableBorder: '#e6e3da',
+    blockquoteText: '#45423b', sourcesLabel: '#211f1b',
+    toolSuccessText: '#3c5a39', toolSuccessBg: '#edf3ec', toolSuccessBorder: '#cfe0cc',
+    toolErrorText: '#a3321f', toolErrorBg: '#fdecec', toolErrorBorder: '#f5d0cc',
+    errBg: '#fdecec', errText: '#8d3f1e', errBorder: '#f5d0cc'
   };
 
   function buildPreset(overrides) {
@@ -121,7 +121,8 @@
   }
 
   var THEME_PRESETS = {
-    indigo: buildPreset({}),
+    monochrome: buildPreset({}),
+    indigo: buildPreset({ headerBg: '#4f46e5', userBubbleBg: '#4f46e5', btnBg: '#4f46e5', accent: '#4f46e5', accentSoft: '#eef2ff', link: '#2563eb' }),
     emerald: buildPreset({ headerBg: '#059669', userBubbleBg: '#059669', btnBg: '#059669', accent: '#059669', accentSoft: '#d1fae5' }),
     rose: buildPreset({ headerBg: '#e11d48', userBubbleBg: '#e11d48', btnBg: '#e11d48', accent: '#e11d48', accentSoft: '#ffe4e6' }),
     amber: buildPreset({ headerBg: '#d97706', userBubbleBg: '#d97706', btnBg: '#d97706', accent: '#d97706', accentSoft: '#fef3c7' }),
@@ -445,17 +446,17 @@
       '.' + uid + '-text hr{border:none;border-top:1px solid ' + t.tableBorder + ';margin:.6em 0;}' +
       '.' + uid + '-text img{max-width:100%;border-radius:8px;}' +
       '.' + uid + '-thinking-block{align-self:flex-start;max-width:82%;background:' + t.thinkingBg + ';border:1px solid ' + t.thinkingBorder + ';border-radius:8px;padding:6px 10px;font-size:12px;}' +
-      '.' + uid + '-thinking-block summary{cursor:pointer;font-weight:600;color:' + t.thinkingText + ';user-select:none;outline:none;}' +
-      '.' + uid + '-thinking-block pre{margin:8px 0 2px;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:' + t.thinkingText + ';font-style:italic;max-height:220px;overflow-y:auto;}' +
-      '.' + uid + '-tools{align-self:flex-start;max-width:82%;display:flex;flex-wrap:wrap;gap:6px;padding:7px 9px;background:' + t.aiBubbleBg + ';border:1px solid ' + t.aiBubbleBorder + ';color:' + t.aiBubbleText + ';border-radius:12px;}' +
+      '.' + uid + '-thinking-label{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9.5px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:' + t.thinkingText + ';margin-bottom:2px;}' +
+      '.' + uid + '-thinking-block pre{margin:0;white-space:pre-wrap;word-break:break-word;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px;color:' + t.thinkingText + ';font-style:italic;max-height:220px;overflow-y:auto;}' +
+      '.' + uid + '-tools{align-self:flex-start;max-width:82%;display:flex;flex-wrap:wrap;gap:6px;}' +
       '.' + uid + '-tool{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:3px 9px;border-radius:999px;border:1px solid ' + t.toolSuccessBorder + ';background:' + t.toolSuccessBg + ';color:' + t.toolSuccessText + ';}' +
       '.' + uid + '-tool.tool-running{border-color:' + t.toolSuccessBorder + ';color:' + t.toolSuccessText + ';background:' + t.toolSuccessBg + ';}' +
       '.' + uid + '-tool.tool-success{border-color:' + t.toolSuccessBorder + ';color:' + t.toolSuccessText + ';background:' + t.toolSuccessBg + ';}' +
       '.' + uid + '-tool.tool-error{border-color:' + t.toolErrorBorder + ';color:' + t.toolErrorText + ';background:' + t.toolErrorBg + ';}' +
-      '.' + uid + '-sources{margin-top:6px;font-size:12px;}' +
-      '.' + uid + '-sources-title{font-weight:600;color:' + t.sourcesLabel + ';}' +
+      '.' + uid + '-sources{margin-top:6px;font-size:11.5px;line-height:1.6;}' +
+      '.' + uid + '-sources-title{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:9.5px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:' + t.muted + ';margin-bottom:2px;}' +
       '.' + uid + '-sources-file{display:block;color:' + t.sourcesLabel + ';}' +
-      '.' + uid + '-sources a{color:' + t.link + ';text-decoration:none;display:block;margin-top:2px;}' +
+      '.' + uid + '-sources a{color:' + t.link + ';text-decoration:underline;text-underline-offset:2px;display:block;margin-top:2px;}' +
       '.' + uid + '-toolbar{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;border-top:1px solid ' + t.toolbarBorder + ';background:' + t.toolbarBg + ';}' +
       '.' + uid + '-input{flex:1;border:1px solid ' + t.inputBorder + ';border-radius:10px;padding:9px 12px;font-size:14px;resize:none;outline:none;font-family:inherit;max-height:96px;background:' + t.inputBg + ';color:' + t.inputText + ';}' +
       '.' + uid + '-input:focus{border-color:' + t.accent + ';}' +
@@ -504,8 +505,8 @@
   function beginAssistantMessage() {
     var msgs = document.getElementById(uid + '-msgs');
     if (!msgs) return null;
-    thinkingBlock = el('details', { class: uid + '-thinking-block', style: 'display:none' });
-    el('summary', { text: '🧠 Reasoning…' }, thinkingBlock);
+    thinkingBlock = el('div', { class: uid + '-thinking-block', style: 'display:none' });
+    el('div', { class: uid + '-thinking-label', text: 'Reasoning' }, thinkingBlock);
     thinkingPre = el('pre', {}, thinkingBlock);
     toolsBox = el('div', { class: uid + '-tools', style: 'display:none' });
     var textEl = el('div', { class: uid + '-msg bot' });
@@ -521,14 +522,13 @@
     var msgs = document.getElementById(uid + '-msgs');
     if (!sources || !sources.length || !msgs) return;
     var wrap = el('div', { class: uid + '-sources' });
-    el('div', { class: uid + '-sources-title', text: 'Sources:' }, wrap);
+    el('div', { class: uid + '-sources-title', text: 'Sources' }, wrap);
     sources.forEach(function (s, i) {
       var safe = s && typeof s === 'object' && (isValidHttpUrl(s.url) || isFileSource(s.url) || isTextSource(s.url)) ? s : null;
       if (!safe) return;
       if (s.url.indexOf('file://') === 0 || s.url.indexOf('text://') === 0) {
         // uploaded PDF / pasted text: not a clickable link, just a label
-        var icon = s.url.indexOf('text://') === 0 ? '📝' : '📄';
-        el('span', { class: uid + '-sources-file', text: icon + ' [' + (i + 1) + '] ' + safe.title }, wrap);
+        el('span', { class: uid + '-sources-file', text: '[' + (i + 1) + '] ' + safe.title }, wrap);
         return;
       }
       el('a', { href: safe.url, target: '_blank', rel: 'noopener noreferrer', text: '[' + (i + 1) + '] ' + safe.title }, wrap);
@@ -797,10 +797,11 @@
         var delta = parsed.params && parsed.params.data;
         if (delta && delta.delta) {
           if (delta.kind === 'reasoning') {
-            // Reasoning: accumulate into the collapsible thinking block.
-            // The text bubble keeps its own typing indicator until the first
-            // text token arrives — it is NOT cleared here (thinking lives in
-            // its own bubble now, mirroring the preview).
+            // Reasoning: accumulate into the thinking block (always visible
+            // when the Show thinking toggle is on). The text bubble keeps its
+            // own typing indicator until the first text token arrives — it is
+            // NOT cleared here (thinking lives in its own block now,
+            // mirroring the preview).
             assistantThinking += delta.delta;
             if (thinkingBlock && thinkingPre) {
               thinkingBlock.setAttribute('data-has', '1');
@@ -883,7 +884,7 @@
   function init() {
     // Display toggles come from the agent config (set in the preview panel).
     opts = {
-      showThinking: config.show_thinking !== false,
+      showThinking: config.show_thinking === true,
       showTools: config.show_tools !== false,
     };
     injectStyles(resolveTheme());

@@ -64,16 +64,12 @@ const presets = [
               <rect x="13.2" y="8.8" width="2.2" height="5.6" rx="1.1" fill="currentColor" />
             </svg>
           </span>
-          <span class="lp-minichat-title">Meridian Support</span>
+          <span class="lp-minichat-title">Senja Coffee</span>
         </div>
         <div class="lp-minichat-body">
-          <span class="lp-mini-bubble bot"
-            >Hi! I know the shipping and returns pages. What do you need?</span
-          >
-          <span class="lp-mini-bubble user">What is your delivery time?</span>
-          <span class="lp-mini-bubble bot"
-            >Standard delivery is 5 to 8 business days. Expedited takes 2 to 3.</span
-          >
+          <span class="lp-mini-bubble bot">Hi! Ask me anything about the café.</span>
+          <span class="lp-mini-bubble user">What time do you close?</span>
+          <span class="lp-mini-bubble bot">We close at 10pm on weekdays and 11pm on weekends.</span>
         </div>
       </div>
     </div>

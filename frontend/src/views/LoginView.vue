@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import PlugMark from '@/components/PlugMark.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -29,11 +30,13 @@ async function submit() {
 <template>
   <div class="page page-narrow">
     <div class="topbar">
-      <RouterLink to="/" class="brand"><span class="logo-mark">🤖</span> Agent-Plug</RouterLink>
+      <RouterLink to="/" class="brand"
+        ><span class="logo-mark"><PlugMark :size="17" /></span> Agent-Plug</RouterLink
+      >
     </div>
     <div class="card">
       <h1 style="margin-top: 0">Welcome back</h1>
-      <p class="muted">Log in to manage your AI agents.</p>
+      <p class="muted">Log in to manage your agents.</p>
       <div v-if="error" class="error-box">{{ error }}</div>
       <form @submit.prevent="submit">
         <div class="form-group">

@@ -12,7 +12,6 @@
  *   btn        → send button (btnBg/btnText)
  *   input      → input field (inputBg/inputBorder/inputText)
  *   toolbar    → toolbar strip (toolbarBg/toolbarBorder) with input + send
- *   accent     → accent swatch (accent)
  */
 import type { ChatTheme } from '@/utils/themes'
 
@@ -89,22 +88,15 @@ defineProps<{ kind: string; theme: ChatTheme }>()
           color: theme.thinkingText,
         }"
       >
-        <span class="cvp-think-summary">🧠 Reasoning…</span>
+        <span class="cvp-think-label" :style="{ color: theme.thinkingText }">Reasoning</span>
         <span class="cvp-think-line" :style="{ background: theme.thinkingText }" />
         <span class="cvp-think-line short" :style="{ background: theme.thinkingText }" />
       </span>
     </template>
 
-    <!-- Tools bubble (bubble follows the AI bubble colors; chips have their own) -->
+    <!-- Tools chips (plain pills, no wrapping bubble) -->
     <template v-else-if="kind === 'tools'">
-      <span
-        class="cvp-tools"
-        :style="{
-          background: theme.aiBubbleBg,
-          borderColor: theme.aiBubbleBorder,
-          color: theme.aiBubbleText,
-        }"
-      >
+      <span class="cvp-tools">
         <span
           class="cvp-tool"
           :style="{
@@ -167,11 +159,6 @@ defineProps<{ kind: string; theme: ChatTheme }>()
           >Send</span
         >
       </span>
-    </template>
-
-    <!-- Accent swatch -->
-    <template v-else-if="kind === 'accent'">
-      <span class="cvp-accent" :style="{ background: theme.accent }" />
     </template>
   </span>
 </template>
