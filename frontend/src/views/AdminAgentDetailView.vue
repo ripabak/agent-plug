@@ -194,10 +194,6 @@ function fmtDate(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function channelLabel(channel: UsageLog['channel']): string {
-  return channel === 'widget' ? 'Widget' : 'Preview'
-}
-
 function statusLabel(status: UsageLog['status']): string {
   return status.charAt(0).toUpperCase() + status.slice(1)
 }
@@ -585,7 +581,6 @@ onMounted(loadAgent)
                     <thead>
                       <tr>
                         <th>Time</th>
-                        <th>Channel</th>
                         <th>Page</th>
                         <th>Model</th>
                         <th class="num">Input</th>
@@ -597,7 +592,6 @@ onMounted(loadAgent)
                     <tbody>
                       <tr v-for="item in usage.items" :key="item.id">
                         <td class="admin-date">{{ fmtDate(item.created_at) }}</td>
-                        <td>{{ channelLabel(item.channel) }}</td>
                         <td class="usage-page">
                           <a
                             v-if="isPageUrl(item.page_url)"

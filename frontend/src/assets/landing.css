@@ -5,10 +5,9 @@
  * Warm monochrome (bone / ink / clay) editorial style. All selectors are
  * prefixed `.lp-` so this file never leaks into the dashboard styles.
  * Fonts are self-hosted variable fonts (Newsreader / Geist / Geist Mono)
- * declared in landing-fonts.css — no external font requests.
+ * declared in landing-fonts.css (loaded globally via main.ts) — no
+ * external font requests.
  */
-
-@import './landing-fonts.css';
 
 /* anchor navigation: smooth + offset for the fixed nav (harmless for the
    dashboard, which has no same-page anchors) */
@@ -125,10 +124,6 @@ html {
 .lp-section {
   padding: 116px 0;
   scroll-margin-top: calc(var(--lp-nav-h) + 8px);
-}
-
-.lp-section-tight {
-  padding: 96px 0;
 }
 
 /* ------------------------------------------------------------- typography */
@@ -355,15 +350,6 @@ html {
   flex-wrap: wrap;
 }
 
-.lp-hero-note {
-  margin: 22px 0 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: var(--lp-muted);
-}
-
 .lp-hero-stage {
   position: relative;
   display: flex;
@@ -460,20 +446,6 @@ html {
 }
 
 /* ------------------------------------------------------------- usage ad */
-.lp-usage-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
-  gap: 56px;
-  align-items: center;
-}
-
-.lp-usage-screen {
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  min-width: 0;
-}
-
 /* usage dashboard mock (mirrors the dashboard Usage tab) */
 .lp-usage-win .lp-win-body {
   padding: 20px 22px;
@@ -985,15 +957,6 @@ html {
   background: #fff;
 }
 
-.lp-toggle.off {
-  background: var(--lp-border-strong);
-}
-
-.lp-toggle.off::after {
-  right: auto;
-  left: 3px;
-}
-
 /* mini chat preview used by the theme screen */
 .lp-minichat {
   border: 1px solid var(--lp-border-strong);
@@ -1400,22 +1363,6 @@ html {
   cursor: default;
 }
 
-.lp-launcher {
-  position: absolute;
-  right: -14px;
-  bottom: -14px;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: var(--lp-ink);
-  color: var(--lp-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--lp-shadow-widget);
-  z-index: 2;
-}
-
 /* --------------------------------------------------------------- faq */
 .lp-browser-launcher {
   position: absolute;
@@ -1710,11 +1657,6 @@ html {
 
   .lp-stat {
     border-top: 1px solid var(--lp-border-strong);
-  }
-
-  .lp-usage-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 40px;
   }
 
   .lp-hero-cta .lp-btn {

@@ -31,7 +31,6 @@ _pending_tasks: set[asyncio.Task] = set()
 def spawn_usage_log(
     agent_id: int,
     thread_key: str,
-    user_id: int | None,
     status: str,
     usage: dict,
     client_ip: str | None = None,
@@ -55,7 +54,6 @@ def spawn_usage_log(
                 db,
                 agent_id,
                 thread_key,
-                user_id,
                 status,
                 usage,
                 country=country,
@@ -85,7 +83,6 @@ async def record_usage(
     db: AsyncSession,
     agent_id: int,
     thread_key: str,
-    user_id: int | None,
     status: str,
     usage: dict,
     country: str | None = None,
@@ -100,7 +97,6 @@ async def record_usage(
         db.add(
             AgentUsage(
                 agent_id=agent_id,
-                channel="widget" if user_id is None else "preview",
                 thread_id=thread_key,
                 model=(usage.get("model") or None) if isinstance(usage, dict) else None,
                 input_tokens=int(usage.get("input_tokens") or 0),

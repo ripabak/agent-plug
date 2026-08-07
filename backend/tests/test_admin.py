@@ -62,7 +62,6 @@ async def _add_usage(agent_id: int, input_tokens: int, output_tokens: int) -> No
         db.add(
             AgentUsage(
                 agent_id=agent_id,
-                channel="widget",
                 thread_id="seed",
                 model="test-model",
                 input_tokens=input_tokens,

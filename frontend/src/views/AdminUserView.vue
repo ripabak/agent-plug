@@ -56,10 +56,6 @@ function fmtDate(iso: string | null): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function channelLabel(channel: UsageLog['channel']): string {
-  return channel === 'widget' ? 'Widget' : 'Preview'
-}
-
 function statusLabel(status: UsageLog['status']): string {
   return status.charAt(0).toUpperCase() + status.slice(1)
 }
@@ -166,7 +162,6 @@ onMounted(() => {
                 <tr>
                   <th>Time</th>
                   <th>Agent</th>
-                  <th>Channel</th>
                   <th>Page</th>
                   <th>Model</th>
                   <th class="num">Input</th>
@@ -182,7 +177,6 @@ onMounted(() => {
                     <template v-if="item.agent_name">{{ item.agent_name }}</template>
                     <template v-else>—</template>
                   </td>
-                  <td>{{ channelLabel(item.channel) }}</td>
                   <td class="usage-page">
                     <a
                       v-if="isPageUrl(item.page_url)"

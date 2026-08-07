@@ -10,7 +10,7 @@ from sqlalchemy import select
 from app.config import UPLOAD_DIR
 from app.database import async_session
 from app.models import Agent, Source, User
-from app.rag.pdf import parse_pdf
+from app.rag.pdf import parse_pdf_bytes
 from app.rag.pipeline import index_source
 from app.rag.store import RAGStoreManager
 
@@ -56,17 +56,13 @@ class FakeEmbeddings(Embeddings):
 
 
 class TestParsePdf:
-    def test_extracts_text_from_pdf(self, tmp_path):
-        path = tmp_path / "sample.pdf"
-        path.write_bytes(make_pdf("Welcome to Agent Plug PDF testing"))
-        text = parse_pdf(path)
+    def test_extracts_text_from_pdf(self):
+        text = parse_pdf_bytes(make_pdf("Welcome to Agent Plug PDF testing"))
         assert "Welcome to Agent Plug PDF testing" in text
 
-    def test_empty_pdf_raises(self, tmp_path):
-        path = tmp_path / "blank.pdf"
-        path.write_bytes(make_pdf(""))
+    def test_empty_pdf_raises(self):
         with pytest.raises(ValueError):
-            parse_pdf(path)
+            parse_pdf_bytes(make_pdf(""))
 
 
 @pytest.mark.asyncio

@@ -91,10 +91,6 @@ function fmtTime(iso: string): string {
   return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
 }
 
-function channelLabel(channel: UsageLog['channel']): string {
-  return channel === 'widget' ? 'Widget' : 'Preview'
-}
-
 function statusClass(status: UsageLog['status']): string {
   return `usage-status usage-status-${status}`
 }
@@ -203,7 +199,6 @@ onMounted(load)
               <thead>
                 <tr>
                   <th>Time</th>
-                  <th>Channel</th>
                   <th>Country</th>
                   <th>Page</th>
                   <th>Model</th>
@@ -216,7 +211,6 @@ onMounted(load)
               <tbody>
                 <tr v-for="item in data.items" :key="item.id">
                   <td class="usage-time">{{ fmtTime(item.created_at) }}</td>
-                  <td>{{ channelLabel(item.channel) }}</td>
                   <td class="usage-country">
                     <template v-if="item.country"
                       >{{ countryFlag(item.country) }} {{ countryName(item.country) }}</template

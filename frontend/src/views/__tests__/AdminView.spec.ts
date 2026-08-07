@@ -126,7 +126,6 @@ const USAGE: UsageResponse = {
   items: [
     {
       id: 9,
-      channel: 'widget',
       thread_id: 'a1:t',
       model: 'test-model',
       input_tokens: 100,
@@ -261,7 +260,6 @@ describe('AdminUserView', () => {
     expect(text).toContain('ada@example.com')
     expect(text).toContain('Admin Bot')
     expect(text).toContain('2/3 sources')
-    expect(text).toContain('Widget')
     expect(text).toContain('test-model')
 
     // agent card links to the admin agent detail page

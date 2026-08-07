@@ -128,9 +128,6 @@ class SessionManager:
     def get(self, thread_id: str) -> AgentSession:
         return self._sessions[thread_id]
 
-    def remove(self, thread_id: str) -> None:
-        self._sessions.pop(thread_id, None)
-
 
 session_manager = SessionManager()
 
@@ -179,7 +176,6 @@ async def start_agent_run(
     thread_key: str,
     agent_id: int,
     messages: list[dict],
-    user_id: int | None = None,
     client_ip: str | None = None,
     page_url: str | None = None,
 ) -> str:
@@ -197,7 +193,7 @@ async def start_agent_run(
             agent = await build_agent(db, agent_id, get_checkpointer())
             thread_config: RunnableConfig = {"configurable": {"thread_id": thread_key}}
 
-            await _upsert_thread_mapping(db, thread_key, agent_id, user_id, page_url)
+            await _upsert_thread_mapping(db, thread_key, agent_id, page_url)
 
             state = await agent.aget_state(thread_config)
             has_history = bool(state is not None and state.values.get("messages"))
@@ -266,7 +262,6 @@ async def start_agent_run(
                             metadata = msg_event.get("metadata") or {}
                             for k in ("input_tokens", "output_tokens", "total_tokens"):
                                 session.total_usage[k] = session.total_usage.get(k, 0) + usage.get(k, 0)
-                            session.total_usage["calls"] = session.total_usage.get("calls", 0) + 1
                             # Keep the last model + cost for the usage dashboard row.
                             session.total_usage["model"] = metadata.get("model_name")
                             session.total_usage["cost"] = metadata.get("cost")
@@ -327,14 +322,14 @@ async def start_agent_run(
             session.buffer_event(
                 _make_event("lifecycle", {"event": "completed", "total_usage": session.total_usage.copy()})
             )
-            spawn_usage_log(agent_id, thread_key, user_id, "completed", session.total_usage.copy(), client_ip, page_url)
+            spawn_usage_log(agent_id, thread_key, "completed", session.total_usage.copy(), client_ip, page_url)
 
         except asyncio.CancelledError:
             session.buffer_event(_make_event("lifecycle", {"event": "cancelled"}))
-            spawn_usage_log(agent_id, thread_key, user_id, "cancelled", session.total_usage.copy(), client_ip, page_url)
+            spawn_usage_log(agent_id, thread_key, "cancelled", session.total_usage.copy(), client_ip, page_url)
         except Exception as exc:  # surface failures to the stream
             session.buffer_event(_make_event("lifecycle", {"event": "failed", "error": str(exc)}))
-            spawn_usage_log(agent_id, thread_key, user_id, "failed", session.total_usage.copy(), client_ip, page_url)
+            spawn_usage_log(agent_id, thread_key, "failed", session.total_usage.copy(), client_ip, page_url)
         finally:
             reset_progress_emitter()
             session._running = False
@@ -395,15 +390,14 @@ def _encode_sse(event: dict) -> str:
 
 
 async def _upsert_thread_mapping(
-    db, thread_key: str, agent_id: int, user_id: int | None, page_url: str | None = None
+    db, thread_key: str, agent_id: int, page_url: str | None = None
 ) -> None:
     result = await db.execute(select(AgentThread).where(AgentThread.thread_id == thread_key))
     mapping = result.scalar_one_or_none()
     if mapping is None:
-        db.add(AgentThread(thread_id=thread_key, agent_id=agent_id, user_id=user_id, page_url=page_url))
+        db.add(AgentThread(thread_id=thread_key, agent_id=agent_id, page_url=page_url))
     elif mapping.agent_id != agent_id:
         mapping.agent_id = agent_id
-        mapping.user_id = user_id
         mapping.page_url = page_url
     elif page_url is not None:
         mapping.page_url = page_url  # SPA navigation: keep the URL current
@@ -470,8 +464,3 @@ async def build_agent_from_thread(thread_key: str):
         return await build_agent(db, agent_id, get_checkpointer())
     finally:
         await db.close()
-
-
-async def delete_thread_state(thread_key: str) -> None:
-    """Delete checkpointer state for a thread (mapping deleted by caller)."""
-    await get_checkpointer().adelete_thread(thread_key)

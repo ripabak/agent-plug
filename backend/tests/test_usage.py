@@ -88,30 +88,8 @@ async def _register_and_create_agent(async_client) -> tuple[dict, dict, int]:
     return headers, res.json(), user_id
 
 
-async def _run_preview_chat(
-    async_client, headers, agent_id: int, thread: str, user_id: int, page_url: str | None = None
-) -> None:
-    res = await async_client.post(
-        f"/api/threads/{thread}/commands",
-        json={
-            "method": "run.start",
-            "id": "c1",
-            "params": {
-                "input": {
-                    "agent_id": agent_id,
-                    "messages": [{"role": "user", "content": "hi"}],
-                    **({"page_url": page_url} if page_url else {}),
-                }
-            },
-        },
-        headers=headers,
-    )
-    assert res.status_code == 200
-    assert res.json()["type"] == "success"
-    await _collect_stream(f"u{user_id}:{thread}")
-
-
-async def _run_widget_chat(async_client, agent: dict, thread: str, page_url: str | None = None) -> None:
+async def _run_chat(async_client, agent: dict, thread: str, page_url: str | None = None) -> None:
+    """Run one chat via the public widget protocol (the only chat path now)."""
     tok = {"X-Agent-Token": agent["public_token"]}
     res = await async_client.post(
         f"/api/public/agents/{agent['id']}/commands",
@@ -121,7 +99,7 @@ async def _run_widget_chat(async_client, agent: dict, thread: str, page_url: str
             "params": {
                 "input": {
                     "thread_id": thread,
-                    "messages": [{"role": "user", "content": "hi widget"}],
+                    "messages": [{"role": "user", "content": "hi"}],
                     **({"page_url": page_url} if page_url else {}),
                 }
             },
@@ -163,16 +141,11 @@ async def _wait_for_usage(async_client, headers, agent_id: int, expected_total: 
 @pytest.mark.asyncio
 async def test_usage_rows_carry_page_url(async_client):
     """The usage row records WHERE the widget was embedded (page_url)."""
-    headers, agent, user_id = await _register_and_create_agent(async_client)
-    await _run_preview_chat(
-        async_client,
-        headers,
-        agent["id"],
-        "page-url-thread",
-        user_id,
-        page_url="https://shop.example.com/items/42",
+    headers, agent, _user_id = await _register_and_create_agent(async_client)
+    await _run_chat(
+        async_client, agent, "page-url-thread", page_url="https://shop.example.com/items/42"
     )
-    await _run_widget_chat(
+    await _run_chat(
         async_client, agent, "page-url-widget", page_url="https://landing.example.com/pricing"
     )
 
@@ -184,12 +157,12 @@ async def test_usage_rows_carry_page_url(async_client):
 # ------------------------------------------------------------------- tests
 @pytest.mark.asyncio
 async def test_runs_write_usage_rows_and_summary(async_client):
-    headers, agent, user_id = await _register_and_create_agent(async_client)
+    headers, agent, _user_id = await _register_and_create_agent(async_client)
 
-    # two preview chats + one widget chat = 3 requests
-    await _run_preview_chat(async_client, headers, agent["id"], "u-thread-1", user_id)
-    await _run_preview_chat(async_client, headers, agent["id"], "u-thread-2", user_id)
-    await _run_widget_chat(async_client, agent, "w-thread-1")
+    # three chats = 3 requests
+    await _run_chat(async_client, agent, "w-thread-1")
+    await _run_chat(async_client, agent, "w-thread-2")
+    await _run_chat(async_client, agent, "w-thread-3")
 
     body = await _wait_for_usage(async_client, headers, agent["id"], expected_total=3)
     summary = body["summary"]
@@ -203,21 +176,19 @@ async def test_runs_write_usage_rows_and_summary(async_client):
     assert summary["series"][-1]["input_tokens"] == 300
     assert len(summary["series"]) == 30  # default days window
 
-    # history: newest first, both channels present, token fields populated
+    # history: newest first, token fields populated
     items = body["items"]
     assert len(items) == 3
-    channels = {i["channel"] for i in items}
-    assert channels == {"preview", "widget"}
     assert all(i["input_tokens"] == 100 and i["output_tokens"] == 50 for i in items)
     assert all(i["model"] == "test-model" and i["status"] == "completed" for i in items)
 
 
 @pytest.mark.asyncio
 async def test_usage_history_pagination(async_client):
-    headers, agent, user_id = await _register_and_create_agent(async_client)
+    headers, agent, _user_id = await _register_and_create_agent(async_client)
 
     for n in range(3):
-        await _run_preview_chat(async_client, headers, agent["id"], f"page-thread-{n}", user_id)
+        await _run_chat(async_client, agent, f"page-thread-{n}")
 
     await _wait_for_usage(async_client, headers, agent["id"], expected_total=3)
     res = await async_client.get(
@@ -261,19 +232,19 @@ async def test_usage_records_client_country(async_client, monkeypatch):
         return "ID"
 
     monkeypatch.setattr("app.services.usage_service.resolve_country", fake_resolve)
-    headers, agent, user_id = await _register_and_create_agent(async_client)
+    headers, agent, _user_id = await _register_and_create_agent(async_client)
 
     res = await async_client.post(
-        "/api/threads/country-1/commands",
+        f"/api/public/agents/{agent['id']}/commands",
         json={
             "method": "run.start",
             "id": "c1",
-            "params": {"input": {"agent_id": agent["id"], "messages": [{"role": "user", "content": "hi"}]}},
+            "params": {"input": {"thread_id": "country-1", "messages": [{"role": "user", "content": "hi"}]}},
         },
-        headers={**headers, "X-Forwarded-For": "8.8.8.8"},
+        headers={**{"X-Agent-Token": agent["public_token"]}, "X-Forwarded-For": "8.8.8.8"},
     )
     assert res.status_code == 200
-    await _collect_stream(f"u{user_id}:country-1")
+    await _collect_stream(f"a{agent['id']}:country-1")
 
     body = await _wait_for_usage(async_client, headers, agent["id"], expected_total=1)
     assert body["items"][0]["country"] == "ID"

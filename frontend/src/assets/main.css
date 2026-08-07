@@ -228,17 +228,6 @@ textarea {
   min-height: 60px;
 }
 
-.field-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.field-row > * {
-  flex: 1 1 140px;
-  min-width: 0;
-}
-
 .avatar-picker {
   display: flex;
   flex-wrap: wrap;
@@ -950,138 +939,6 @@ code,
   accent-color: var(--chat-accent);
 }
 
-/* ---------- markdown rendering (assistant messages) ----------
-   Mirrors the widget: marked (GFM + breaks) sanitized with DOMPurify. */
-.markdown-content {
-  min-width: 0;
-  max-width: 100%;
-  white-space: normal;
-  word-break: break-word;
-}
-
-.markdown-content p {
-  margin: 0.25em 0;
-}
-
-.markdown-content p:first-child {
-  margin-top: 0;
-}
-
-.markdown-content p:last-child {
-  margin-bottom: 0;
-}
-
-.markdown-content pre {
-  overflow-x: auto;
-  max-width: 100%;
-  margin: 0.4em 0;
-  padding: 10px 12px;
-  font-size: 12.5px;
-  line-height: 1.5;
-  background: var(--chat-pre-bg);
-  border: 1px solid var(--chat-pre-border);
-  border-radius: 8px;
-}
-
-.markdown-content code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  font-size: 0.85em;
-  background: var(--chat-code-bg);
-  padding: 0.1em 0.35em;
-  border-radius: 5px;
-}
-
-.markdown-content pre code {
-  display: block;
-  background: transparent;
-  padding: 0;
-  border: 0;
-  font-size: inherit;
-  white-space: pre;
-}
-
-.markdown-content strong {
-  font-weight: 700;
-}
-
-.markdown-content a {
-  color: var(--chat-link);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  word-break: break-all;
-}
-
-.markdown-content ul,
-.markdown-content ol {
-  padding-left: 1.4em;
-  margin: 0.25em 0;
-}
-
-.markdown-content h1,
-.markdown-content h2,
-.markdown-content h3,
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
-  font-weight: 700;
-  line-height: 1.3;
-  margin: 0.5em 0 0.25em;
-}
-
-.markdown-content h1 {
-  font-size: 1.2em;
-}
-.markdown-content h2 {
-  font-size: 1.1em;
-}
-.markdown-content h3 {
-  font-size: 1.02em;
-}
-.markdown-content h4,
-.markdown-content h5,
-.markdown-content h6 {
-  font-size: 1em;
-}
-
-.markdown-content table {
-  border-collapse: collapse;
-  margin: 0.4em 0;
-  font-size: 13px;
-  max-width: 100%;
-  display: block;
-  overflow-x: auto;
-}
-
-.markdown-content th,
-.markdown-content td {
-  border: 1px solid var(--chat-table-border);
-  padding: 4px 8px;
-  text-align: left;
-}
-
-.markdown-content th {
-  background: var(--chat-pre-bg);
-  font-weight: 600;
-}
-
-.markdown-content blockquote {
-  margin: 0.4em 0;
-  padding: 0 0 0 0.8em;
-  border-left: 3px solid var(--chat-table-border);
-  color: var(--chat-blockquote-text);
-}
-
-.markdown-content hr {
-  border: none;
-  border-top: 1px solid var(--chat-table-border);
-  margin: 0.6em 0;
-}
-
-.markdown-content img {
-  max-width: 100%;
-  border-radius: 8px;
-}
-
 /* ---------- usage tab (charts + history) ---------- */
 .usage-summary {
   display: grid;
@@ -1412,25 +1269,6 @@ code,
   font-size: 28px;
 }
 
-.or-divider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin: 4px 0 14px;
-}
-
-.or-divider::before,
-.or-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--border);
-}
-
 .kind-badge {
   display: inline-flex;
   align-items: center;
@@ -1589,33 +1427,6 @@ code,
 
 .admin-user-head .agent-avatar {
   font-size: 20px;
-}
-
-.admin-agent-name {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.admin-agent-emoji {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  flex: none;
-  color: #fff;
-}
-
-.admin-agent-desc {
-  font-size: 0.85em;
-  max-width: 320px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 /* Admin agent read-only detail: field grid. */

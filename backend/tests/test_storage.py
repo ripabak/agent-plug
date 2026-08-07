@@ -103,8 +103,6 @@ async def test_s3_storage_prefix():
 @pytest.mark.asyncio
 async def test_s3_storage_concurrent_first_writes_create_bucket_once():
     """Bucket creation is guarded by a lock — only one create_bucket call."""
-    client = FakeS3Client()
-
     class CountingBucketClient(FakeS3Client):
         def __init__(self) -> None:
             super().__init__()

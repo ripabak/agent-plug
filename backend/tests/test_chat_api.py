@@ -1,4 +1,9 @@
-"""Integration tests for the SSE chat runtime (authenticated + public widget).
+"""Integration tests for the SSE chat runtime (public widget protocol).
+
+The dashboard preview embeds the real widget (`app/widget/widget.js`), so
+the ONLY chat path in the platform is the public API (`/api/public/agents/
+{id}/commands|stream|history`, token-authenticated). The authed
+`/api/threads` router was removed — these tests exercise the public route.
 
 Uses a FAKE agent graph (no real LLM calls) injected by monkeypatching
 `app.services.agent_session_service.build_agent`.
@@ -85,8 +90,8 @@ async def async_client():
     await close_checkpointer()
 
 
-async def _register_and_create_agent(async_client) -> tuple[dict, dict, int]:
-    """Register a user + create an agent; returns (auth_headers, agent, user_id)."""
+async def _register_and_create_agent(async_client) -> tuple[dict, dict]:
+    """Register a user + create an agent; returns (auth_headers, agent)."""
     email = f"chat-{uuid.uuid4().hex}@example.com"
     res = await async_client.post(
         "/api/auth/register",
@@ -94,11 +99,10 @@ async def _register_and_create_agent(async_client) -> tuple[dict, dict, int]:
     )
     assert res.status_code == 201
     headers = {"Authorization": f"Bearer {res.json()['access_token']}"}
-    user_id = res.json()["user"]["id"]
 
     res = await async_client.post("/api/agents", json={"name": "Chat Bot", "description": "d"}, headers=headers)
     assert res.status_code == 201
-    return headers, res.json(), user_id
+    return headers, res.json()
 
 
 async def _collect_stream(thread_key: str, channels=None) -> str:
@@ -115,8 +119,8 @@ async def _collect_stream_until_end(thread_key: str, channels=None) -> str:
     """Consume the SSE generator to the END — must terminate on its own.
 
     Regression guard: the stream must close right after the terminal
-    lifecycle event (no infinite keep-alive loop), otherwise the preview /
-    widget would keep "streaming" forever.
+    lifecycle event (no infinite keep-alive loop), otherwise the widget
+    would keep "streaming" forever.
     """
     frames = []
     async for frame in svc.stream_events(thread_key, channels or ["*"], 0):
@@ -124,15 +128,31 @@ async def _collect_stream_until_end(thread_key: str, channels=None) -> str:
     return "\n".join(frames)
 
 
+async def _start_public_chat(async_client, agent: dict, thread_id: str, **input_extra) -> None:
+    tok = {"X-Agent-Token": agent["public_token"]}
+    res = await async_client.post(
+        f"/api/public/agents/{agent['id']}/commands",
+        json={
+            "method": "run.start",
+            "id": "c1",
+            "params": {"input": {"thread_id": thread_id, "messages": [{"role": "user", "content": "hi"}], **input_extra}},
+        },
+        headers=tok,
+    )
+    assert res.status_code == 200
+    assert res.json()["type"] == "success"
+
+
 # --------------------------------------------------------------- HTTP routes
 @pytest.mark.asyncio
 async def test_run_start_and_cancel_commands(async_client):
-    headers, agent, _ = await _register_and_create_agent(async_client)
+    _headers, agent = await _register_and_create_agent(async_client)
+    tok = {"X-Agent-Token": agent["public_token"]}
 
     res = await async_client.post(
-        "/api/threads/preview-1/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"agent_id": agent["id"], "messages": [{"role": "user", "content": "hi"}]}}},
-        headers=headers,
+        f"/api/public/agents/{agent['id']}/commands",
+        json={"method": "run.start", "id": "c1", "params": {"input": {"thread_id": "t1", "messages": [{"role": "user", "content": "hi"}]}}},
+        headers=tok,
     )
     assert res.status_code == 200
     body = res.json()
@@ -140,42 +160,27 @@ async def test_run_start_and_cancel_commands(async_client):
     assert body["result"]["run_id"]
 
     res = await async_client.post(
-        "/api/threads/preview-1/commands",
-        json={"method": "run.cancel", "id": "c2"},
-        headers=headers,
+        f"/api/public/agents/{agent['id']}/commands",
+        json={"method": "run.cancel", "id": "c2", "params": {"thread_id": "t1"}},
+        headers=tok,
     )
     assert res.json()["result"] == {"cancelled": True}
 
 
 @pytest.mark.asyncio
-async def test_run_start_foreign_agent_rejected(async_client):
-    headers, agent, _ = await _register_and_create_agent(async_client)
-    res = await async_client.post(
-        "/api/auth/register",
-        json={"email": f"other-{uuid.uuid4().hex}@example.com", "display_name": "O", "password": "secret123"},
-    )
-    other = {"Authorization": f"Bearer {res.json()['access_token']}"}
-
-    res = await async_client.post(
-        "/api/threads/t1/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"agent_id": agent["id"], "messages": []}}},
-        headers=other,
-    )
-    assert res.status_code == 200
-    assert res.json()["type"] == "error"
-    assert res.json()["error"] == "not_found"
-
-
-@pytest.mark.asyncio
 async def test_unknown_command(async_client):
-    headers, _agent, _uid = await _register_and_create_agent(async_client)
-    res = await async_client.post("/api/threads/t1/commands", json={"method": "nope", "id": "c1"}, headers=headers)
+    _headers, agent = await _register_and_create_agent(async_client)
+    res = await async_client.post(
+        f"/api/public/agents/{agent['id']}/commands",
+        json={"method": "nope", "id": "c1"},
+        headers={"X-Agent-Token": agent["public_token"]},
+    )
     assert res.json()["error"] == "unknown_command"
 
 
 @pytest.mark.asyncio
 async def test_public_widget_requires_token(async_client):
-    headers, agent, _ = await _register_and_create_agent(async_client)
+    _headers, agent = await _register_and_create_agent(async_client)
 
     assert (await async_client.get(f"/api/public/agents/{agent['id']}/config")).status_code == 401
     assert (await async_client.post(f"/api/public/agents/{agent['id']}/commands", json={})).status_code == 401
@@ -185,7 +190,7 @@ async def test_public_widget_requires_token(async_client):
 
 @pytest.mark.asyncio
 async def test_public_widget_config_exposes_only_public_fields(async_client):
-    headers, agent, _ = await _register_and_create_agent(async_client)
+    _headers, agent = await _register_and_create_agent(async_client)
     tok = {"X-Agent-Token": agent["public_token"]}
 
     res = await async_client.get(f"/api/public/agents/{agent['id']}/config", headers=tok)
@@ -198,17 +203,13 @@ async def test_public_widget_config_exposes_only_public_fields(async_client):
 
 # -------------------------------------------------------- service-level SSE
 @pytest.mark.asyncio
-async def test_authed_chat_streams_full_event_sequence(async_client):
-    headers, agent, user_id = await _register_and_create_agent(async_client)
-    thread_key = f"u{user_id}:preview-1"
+async def test_chat_streams_full_event_sequence(async_client):
+    """The public widget chat emits the complete SSE event contract."""
+    _headers, agent = await _register_and_create_agent(async_client)
+    thread_id = "preview-1"
+    await _start_public_chat(async_client, agent, thread_id)
 
-    await async_client.post(
-        f"/api/threads/preview-1/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"agent_id": agent["id"], "messages": [{"role": "user", "content": "hi"}]}}},
-        headers=headers,
-    )
-
-    text = await _collect_stream(thread_key)
+    text = await _collect_stream(f"a{agent['id']}:{thread_id}")
     assert "event: lifecycle" in text and "running" in text
     assert "event: lifecycle" in text and "completed" in text
     assert "event: message_start" in text
@@ -231,83 +232,33 @@ async def test_stream_terminates_after_completed_lifecycle(async_client):
     """The SSE stream must END after the terminal lifecycle event.
 
     Before the fix the generator looped on keep-alives forever, so the
-    preview/widget never left the streaming state ("loading tanpa henti")
-    and the send button stayed disabled.
+    widget never left the streaming state ("loading tanpa henti") and the
+    send button stayed disabled.
     """
-    headers, agent, user_id = await _register_and_create_agent(async_client)
-    thread_key = f"u{user_id}:preview-end"
-
-    await async_client.post(
-        f"/api/threads/preview-end/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"agent_id": agent["id"], "messages": [{"role": "user", "content": "hi"}]}}},
-        headers=headers,
-    )
+    _headers, agent = await _register_and_create_agent(async_client)
+    thread_id = "preview-end"
+    await _start_public_chat(async_client, agent, thread_id)
 
     # Consumes the generator to its natural end — will hang (and time out)
     # if the stream never closes.
-    text = await _collect_stream_until_end(thread_key)
+    text = await _collect_stream_until_end(f"a{agent['id']}:{thread_id}")
     assert "event: lifecycle" in text
     assert '"event": "completed"' in text
     assert "keepalive" not in text
 
 
 @pytest.mark.asyncio
-async def test_public_widget_chat_streams(async_client):
-    headers, agent, _ = await _register_and_create_agent(async_client)
-    tok = {"X-Agent-Token": agent["public_token"]}
-    thread_id = "widget-session-1"
-
-    res = await async_client.post(
-        f"/api/public/agents/{agent['id']}/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"thread_id": thread_id, "messages": [{"role": "user", "content": "hello widget"}]}}},
-        headers=tok,
-    )
-    assert res.status_code == 200
-    assert res.json()["type"] == "success"
-
-    text = await _collect_stream(f"a{agent['id']}:{thread_id}")
-    assert "Hello " in text
-    assert "world!" in text
-    assert "completed" in text
-
-
-@pytest.mark.asyncio
-async def test_thread_history_returns_messages(async_client):
-    headers, agent, user_id = await _register_and_create_agent(async_client)
-    thread_key = f"u{user_id}:history-1"
-
-    await async_client.post(
-        "/api/threads/history-1/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"agent_id": agent["id"], "messages": [{"role": "user", "content": "remember this"}]}}},
-        headers=headers,
-    )
-    await _collect_stream(thread_key)
+async def test_public_widget_history_returns_messages(async_client):
+    _headers, agent = await _register_and_create_agent(async_client)
+    thread_id = "history-1"
+    await _start_public_chat(async_client, agent, thread_id)
+    await _collect_stream(f"a{agent['id']}:{thread_id}")
 
     # The fake graph never persists messages, so history is empty — but the
     # endpoint must not error.
-    res = await async_client.get("/api/threads/history-1", headers=headers)
-    assert res.status_code == 200
-    assert "messages" in res.json()
-
-
-@pytest.mark.asyncio
-async def test_delete_thread_removes_state(async_client):
-    """DELETE /threads/{id} must not crash (regression: adelete_state removal)."""
-    headers, agent, user_id = await _register_and_create_agent(async_client)
-    thread_id = "delete-me"
-
-    res = await async_client.post(
-        f"/api/threads/{thread_id}/commands",
-        json={"method": "run.start", "id": "c1", "params": {"input": {"agent_id": agent["id"], "messages": [{"role": "user", "content": "hi"}]}}},
-        headers=headers,
+    res = await async_client.get(
+        f"/api/public/agents/{agent['id']}/history?thread_id={thread_id}",
+        headers={"X-Agent-Token": agent["public_token"]},
     )
     assert res.status_code == 200
-
-    res = await async_client.delete(f"/api/threads/{thread_id}", headers=headers)
-    assert res.status_code == 200
-    assert res.json() == {"ok": True}
-
-    # thread is gone — history should be empty and not error
-    res = await async_client.get(f"/api/threads/{thread_id}", headers=headers)
-    assert res.status_code == 200
-    assert res.json() == {"messages": []}
+    assert "messages" in res.json()

@@ -154,10 +154,6 @@ class AgentThread(Base):
     agent_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("agent.id", ondelete="CASCADE"), nullable=False
     )
-    # Null for public (widget) threads; set for dashboard preview threads.
-    user_id: Mapped[int | None] = mapped_column(
-        Integer, ForeignKey("user.id", ondelete="CASCADE"), nullable=True
-    )
     # Current page URL reported by the widget for this thread (run.start input);
     # read by the agent's `read_current_page` tool. None = no page context.
     page_url: Mapped[str | None] = mapped_column(String, nullable=True)
@@ -184,8 +180,6 @@ class AgentUsage(Base):
     agent_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("agent.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    # Where the request came from: 'preview' (dashboard) or 'widget' (public).
-    channel: Mapped[str] = mapped_column(String, default="preview", nullable=False)
     thread_id: Mapped[str] = mapped_column(String, default="", nullable=False)
     model: Mapped[str | None] = mapped_column(String, nullable=True)
     input_tokens: Mapped[int] = mapped_column(Integer, default=0)

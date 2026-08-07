@@ -114,7 +114,6 @@ const USAGE: UsageResponse = {
   items: [
     {
       id: 9,
-      channel: 'widget',
       thread_id: 'a1:t',
       model: 'test-model',
       input_tokens: 100,
@@ -216,7 +215,6 @@ describe('AdminAgentDetailView', () => {
     expect(text).toContain('Requests')
     expect(text).toContain('Total tokens')
     expect(text).toContain('test-model')
-    expect(text).toContain('Widget')
     // where the widget was called from + top countries (parity with UsageTab)
     expect(text).toContain('shop.example.com/items/42')
     expect(text).toContain('Top countries')

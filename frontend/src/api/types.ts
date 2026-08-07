@@ -56,24 +56,11 @@ export interface EmbedResponse {
   public_token: string
 }
 
-export interface ChatMessage {
-  type: 'human' | 'ai'
-  content: string
-  tool_calls?: { id: string; name: string; args: Record<string, unknown> }[]
-}
-
-export interface SourceCitation {
-  url: string
-  title: string
-}
-
 // --- usage (dashboard tab) ---
-export type UsageChannel = 'preview' | 'widget'
 export type UsageStatus = 'completed' | 'failed' | 'cancelled'
 
 export interface UsageLog {
   id: number
-  channel: UsageChannel
   thread_id: string
   model: string | null
   input_tokens: number

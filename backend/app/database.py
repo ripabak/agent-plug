@@ -51,8 +51,13 @@ async def init_db() -> None:
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_tools BOOLEAN DEFAULT TRUE",
             "ALTER TABLE agent_thread ADD COLUMN IF NOT EXISTS page_url VARCHAR",
             # Dead columns removed (the theme lives in chat_theme now; the
-            # system prompt is composed server-side, never stored per-agent).
+            # system prompt is composed server-side, never stored per-agent;
+            # all chats run through the public widget protocol now, so the
+            # authed-thread user link and the preview/widget channel split
+            # are gone).
             "ALTER TABLE agent DROP COLUMN IF EXISTS theme_color",
             "ALTER TABLE agent DROP COLUMN IF EXISTS system_prompt",
+            "ALTER TABLE agent_thread DROP COLUMN IF EXISTS user_id",
+            "ALTER TABLE agent_usage DROP COLUMN IF EXISTS channel",
         ):
             await conn.execute(text(statement))

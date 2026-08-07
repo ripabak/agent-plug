@@ -75,7 +75,6 @@ function fixture(overrides: Partial<UsageResponse> = {}): UsageResponse {
     items: [
       {
         id: 3,
-        channel: 'widget',
         thread_id: 'a1:t3',
         model: 'test-model',
         input_tokens: 100,
@@ -88,7 +87,6 @@ function fixture(overrides: Partial<UsageResponse> = {}): UsageResponse {
       },
       {
         id: 2,
-        channel: 'preview',
         thread_id: 'u1:t2',
         model: 'test-model',
         input_tokens: 100,
@@ -101,7 +99,6 @@ function fixture(overrides: Partial<UsageResponse> = {}): UsageResponse {
       },
       {
         id: 1,
-        channel: 'preview',
         thread_id: 'u1:t1',
         model: null,
         input_tokens: 100,
@@ -169,8 +166,6 @@ describe('UsageTab.vue', () => {
     const wrapper = await mountTab()
     const rows = wrapper.findAll('tbody tr')
     expect(rows).toHaveLength(3)
-    expect(wrapper.text()).toContain('Widget')
-    expect(wrapper.text()).toContain('Preview')
     expect(wrapper.text()).toContain('Completed')
     expect(wrapper.text()).toContain('Failed')
     expect(wrapper.text()).toContain('Cancelled')
@@ -205,7 +200,6 @@ describe('UsageTab.vue', () => {
         items: [
           {
             id: 1,
-            channel: 'preview',
             thread_id: 'u1:t1',
             model: null,
             input_tokens: 100,

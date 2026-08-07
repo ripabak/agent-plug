@@ -31,7 +31,6 @@ backend/
       agents.py            # /api/agents CRUD + embed + token rotation + avatar upload/remove
       public.py            # + GET /api/public/agents/{id}/avatar (serve WebP, no token)
       knowledge.py         # /api/agents/{id}/sources (+ /files, /text, /reindex)
-      threads.py           # /api/threads (authed SSE chat)
       public.py            # /api/public (widget config/commands/stream/history + widget.js)
     services/
       agent_session_service.py  # background runs, SSE event buffer, sources event, marker parsing
@@ -133,9 +132,11 @@ column is gone). Storage: `STORAGE_BACKEND` (`local`|`s3`),
   URL ada di `Agent.avatar_url`). Widget render foto dengan background
   transparan + `contain` (floating, tanpa warna dasar). Selama foto ada, FE
   men-disable emoji picker.
-- **Chat threads**: dashboard = `u{user_id}:{thread_id}`, widget =
-  `a{agent_id}:{thread_id}`. Public endpoints authenticate with the
-  `X-Agent-Token` header (agent.public_token).
+- **Chat threads**: semua chat (live widget DAN dashboard preview) berjalan
+  lewat protocol public (`/api/public/*`) — preview meng-embed `widget.js`
+  asli, jadi tidak ada route chat authed (`/api/threads` sudah dihapus).
+  Thread key = `a{agent_id}:{thread_id}`, auth via header `X-Agent-Token`
+  (agent.public_token).
 - **/health**: liveness + third-party checks via `GET /health` (lihat
   `app/services/health.py`). Respon `{status: ok|degraded|down, checks:
   {database, storage, openrouter}, timestamp}`; tiap check punya status

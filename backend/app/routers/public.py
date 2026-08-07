@@ -107,7 +107,6 @@ async def handle_command(
             thread_key=thread_key,
             agent_id=agent.id,
             messages=[m.model_dump() for m in input_data.messages],
-            user_id=None,
             client_ip=request_client_ip(request),
             page_url=input_data.page_url,
         )
