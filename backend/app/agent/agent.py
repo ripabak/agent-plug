@@ -39,9 +39,17 @@ def _build_model(model_id: str) -> ChatOpenRouter:
 
 
 def build_system_prompt(agent: Agent) -> str:
-    """Compose the personalized system prompt for an agent."""
+    """Compose the personalized system prompt for an agent.
+
+    The base prompt (knowledge base + citation rules) always stays intact;
+    an optional persona prompt (dashboard "Agent personality" templates) is
+    appended as ADDITIVE instructions and never replaces the base.
+    """
     description = agent.description or f"an AI assistant on the {agent.name} website"
-    return AGENT_SYSTEM_PROMPT.format(name=agent.name, description=description)
+    prompt = AGENT_SYSTEM_PROMPT.format(name=agent.name, description=description)
+    if agent.persona_prompt and agent.persona_prompt.strip():
+        prompt += f"\n\n## Persona\n{agent.persona_prompt.strip()}"
+    return prompt
 
 
 def build_middleware(model: ChatOpenRouter) -> list:

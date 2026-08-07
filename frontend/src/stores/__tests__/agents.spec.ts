@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 
 import { useAgentsStore } from '../agents'
 import { useAuthStore } from '../auth'
-import type { Agent } from '@/api/types'
+import type { Agent, Source } from '@/api/types'
 
 vi.mock('@/api/client', () => ({
   api: {
@@ -39,6 +39,7 @@ const AGENT: Agent = {
   name: 'Support Bot',
   description: '',
   system_prompt: null,
+  persona_prompt: null,
   welcome_message: 'Hi!',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',
@@ -50,6 +51,23 @@ const AGENT: Agent = {
   public_token: 'tok-old',
   created_at: 'now',
   updated_at: 'now',
+}
+
+function newSource(id: number): Source {
+  return {
+    id,
+    agent_id: 1,
+    url: '',
+    kind: 'url',
+    file_name: null,
+    file_size: null,
+    status: 'ready',
+    title: null,
+    error: null,
+    chunk_count: 0,
+    created_at: '',
+    updated_at: '',
+  }
 }
 
 describe('agents store', () => {
@@ -104,5 +122,16 @@ describe('agents store', () => {
 
     expect(api.deleteAgentAvatar).toHaveBeenCalledWith('jwt', 1)
     expect(store.current?.avatar_url).toBeNull()
+  })
+
+  it('prependSources shows freshly created sources first', () => {
+    useAuthStore().token = 'jwt'
+    const store = useAgentsStore()
+    store.sources = [newSource(1), newSource(2)]
+
+    store.prependSources([{ ...newSource(3), status: 'pending' }])
+
+    expect(store.sources.map((s) => s.id)).toEqual([3, 1, 2])
+    expect(store.sources[0]?.status).toBe('pending')
   })
 })

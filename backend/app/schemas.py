@@ -35,6 +35,7 @@ class AgentCreate(BaseModel):
     name: str = Field(min_length=1, max_length=120)
     description: str = ""
     system_prompt: str | None = None
+    persona_prompt: str | None = None
     welcome_message: str = "Hi! How can I help you?"
     theme_color: str = "#a9502a"
     avatar_emoji: str = "🤖"
@@ -47,6 +48,7 @@ class AgentUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=120)
     description: str | None = None
     system_prompt: str | None = None
+    persona_prompt: str | None = None
     welcome_message: str | None = None
     theme_color: str | None = None
     avatar_emoji: str | None = None
@@ -63,6 +65,7 @@ class AgentResponse(BaseModel):
     name: str
     description: str
     system_prompt: str | None
+    persona_prompt: str | None
     welcome_message: str
     theme_color: str
     avatar_emoji: str

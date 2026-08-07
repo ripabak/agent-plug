@@ -5,6 +5,7 @@ import { useAgentsStore } from '@/stores/agents'
 import { validateAvatarFile } from '@/utils/avatar'
 import { AVATAR_TEMPLATES, type AvatarTemplate } from '@/utils/avatarTemplates'
 import AvatarPicker from './AvatarPicker.vue'
+import { PERSONA_TEMPLATES, findPersonaTemplate, type PersonaTemplate } from '@/utils/personaTemplates'
 
 const agentsStore = useAgentsStore()
 const router = useRouter()
@@ -12,10 +13,13 @@ const router = useRouter()
 const form = reactive({
   name: '',
   description: '',
-  system_prompt: '',
+  persona_prompt: '',
   welcome_message: '',
   avatar_emoji: '🤖',
 })
+
+/** Id of the template currently filling the persona textarea ('' = custom). */
+const personaTemplateId = ref('')
 
 const saved = ref(false)
 const error = ref('')
@@ -90,9 +94,16 @@ function syncForm() {
   if (!a) return
   form.name = a.name
   form.description = a.description
-  form.system_prompt = a.system_prompt ?? ''
+  form.persona_prompt = a.persona_prompt ?? ''
+  personaTemplateId.value = findPersonaTemplate(a.persona_prompt)?.id ?? ''
   form.welcome_message = a.welcome_message
   form.avatar_emoji = a.avatar_emoji
+}
+
+/** Fill the persona textarea with a template (additive, editable). */
+function selectPersonaTemplate(t: PersonaTemplate) {
+  form.persona_prompt = t.prompt
+  personaTemplateId.value = t.id
 }
 
 watch(() => agentsStore.current, syncForm, { immediate: true })
@@ -101,7 +112,7 @@ async function save() {
   error.value = ''
   busy.value = true
   try {
-    await agentsStore.update({ ...form, system_prompt: form.system_prompt || null })
+    await agentsStore.update({ ...form, persona_prompt: form.persona_prompt || null })
     saved.value = true
     setTimeout(() => (saved.value = false), 2000)
   } catch (err) {
@@ -153,12 +164,32 @@ async function removeAgent() {
       <input id="c-welcome" v-model="form.welcome_message" type="text" />
     </div>
     <div class="form-group">
-      <label for="c-prompt">System prompt (advanced — overrides the default instructions)</label>
+      <label for="c-persona">Agent personality <span class="muted">(optional)</span></label>
+      <p class="muted" style="font-size: 12px; margin: 0 0 8px">
+        Pick a persona template or write your own. It is added on top of the default
+        instructions — it never replaces them. Leave it empty for the default tone.
+      </p>
+      <div class="persona-templates">
+        <button
+          v-for="t in PERSONA_TEMPLATES"
+          :key="t.id"
+          type="button"
+          class="persona-template"
+          :class="{ active: personaTemplateId === t.id }"
+          :title="t.prompt"
+          @click="selectPersonaTemplate(t)"
+        >
+          <span class="persona-emoji">{{ t.emoji }}</span>
+          <span class="persona-label">{{ t.label }}</span>
+          <span class="persona-desc">{{ t.description }}</span>
+        </button>
+      </div>
       <textarea
-        id="c-prompt"
-        v-model="form.system_prompt"
+        id="c-persona"
+        v-model="form.persona_prompt"
         rows="5"
-        placeholder="Leave empty to use the default prompt (knowledge base + citation rules)."
+        placeholder="e.g. Be very casual, use emojis, and keep it short…"
+        @input="personaTemplateId = ''"
       />
     </div>
     <div class="form-group">

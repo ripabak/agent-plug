@@ -4,12 +4,17 @@ Each source row in Postgres drives the pipeline; the per-agent pgvector
 collection (PGVector, one per agent) holds the chunks with
 {url, title, source_id, agent_id} metadata so answers can cite sources and
 sources can be deleted. Chunk ids are persisted on `source.chunk_ids`.
+
+Concurrency is bounded server-wide (`INDEX_CONCURRENCY`): sources wait in
+`pending` (= "Queued" in the dashboard) until a slot frees up, so bulk
+additions take longer but never overload the server or the embedding API.
 """
 import asyncio
 
 from langchain_core.documents import Document
 from sqlalchemy import or_, select, update
 
+from ..config import INDEX_CONCURRENCY
 from ..database import async_session
 from ..models import Source
 from ..storage import storage
@@ -17,6 +22,21 @@ from . import store_manager
 from .fetcher import fetch_page
 from .pdf import parse_pdf_bytes
 from .splitter import split_text
+
+
+# Bounded-concurrency limiter, shared by ALL agents (server-wide load cap).
+# Held per event loop because pytest-asyncio creates a fresh loop per test; in
+# production (uvicorn) there is a single loop, so one semaphore is shared. The
+# loop is compared by identity (not id()) to avoid address-reuse collisions.
+_index_slots_state: tuple[asyncio.AbstractEventLoop, asyncio.Semaphore] | None = None
+
+
+def _index_slots() -> asyncio.Semaphore:
+    global _index_slots_state
+    loop = asyncio.get_running_loop()
+    if _index_slots_state is None or _index_slots_state[0] is not loop:
+        _index_slots_state = (loop, asyncio.Semaphore(INDEX_CONCURRENCY))
+    return _index_slots_state[1]
 
 
 async def _load_source_text(source: Source) -> tuple[str, str]:
@@ -36,63 +56,75 @@ async def _load_source_text(source: Source) -> tuple[str, str]:
 
 
 async def index_source(source_id: int, mgr=store_manager) -> None:
-    """Index one source end-to-end, updating its status row as it goes."""
+    """Index one source end-to-end, updating its status row as it goes.
+
+    Holds an `INDEX_CONCURRENCY` slot for the whole run; while waiting for a
+    slot the source keeps its `pending` status, which the dashboard renders
+    as "Queued" — so users can see the queue draining in real time.
+    """
+    # Cheap read to resolve agent_id + old chunk ids without consuming a slot.
     async with async_session() as db:
         source = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one_or_none()
         if source is None:
             return
         agent_id = source.agent_id
         old_ids = source.chunk_ids
-        source.status = "fetching"
-        source.error = None
-        await db.commit()
 
-    # Clear previously indexed chunks first (idempotent re-index). Doing this
-    # before loading content means a failed re-index leaves no stale vectors;
-    # `chunk_ids` is reset to [] in the failure branch below.
-    await mgr.delete_source(agent_id, source_id, ids=old_ids)
-
-    try:
-        # Load content off the event loop (URL fetch or PDF parse).
-        text, title = await _load_source_text(source)
-
+    async with _index_slots():
         async with async_session() as db:
-            src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
-            src.status = "indexing"
-            src.title = title
-            await db.commit()
-
-        chunks = split_text(text)
-        docs = [
-            Document(
-                page_content=chunk,
-                metadata={
-                    "url": source.url,
-                    "title": title,
-                    "source_id": source_id,
-                    "agent_id": agent_id,
-                },
-            )
-            for chunk in chunks
-        ]
-
-        ids = await mgr.add_documents(agent_id, source_id, docs)
-
-        async with async_session() as db:
-            src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
-            src.status = "ready"
-            src.chunk_count = len(chunks)
-            src.chunk_ids = ids
+            src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one_or_none()
+            if src is None:
+                return  # deleted while queued — nothing to index
+            src.status = "fetching"
             src.error = None
             await db.commit()
-    except Exception as exc:  # per-URL failure isolation
-        async with async_session() as db:
-            src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
-            src.status = "failed"
-            src.chunk_count = 0
-            src.chunk_ids = []
-            src.error = str(exc)[:500]
-            await db.commit()
+
+        # Clear previously indexed chunks first (idempotent re-index). Doing this
+        # before loading content means a failed re-index leaves no stale vectors;
+        # `chunk_ids` is reset to [] in the failure branch below.
+        await mgr.delete_source(agent_id, source_id, ids=old_ids)
+
+        try:
+            # Load content off the event loop (URL fetch or PDF parse).
+            text, title = await _load_source_text(source)
+
+            async with async_session() as db:
+                src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
+                src.status = "indexing"
+                src.title = title
+                await db.commit()
+
+            chunks = split_text(text)
+            docs = [
+                Document(
+                    page_content=chunk,
+                    metadata={
+                        "url": source.url,
+                        "title": title,
+                        "source_id": source_id,
+                        "agent_id": agent_id,
+                    },
+                )
+                for chunk in chunks
+            ]
+
+            ids = await mgr.add_documents(agent_id, source_id, docs)
+
+            async with async_session() as db:
+                src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
+                src.status = "ready"
+                src.chunk_count = len(chunks)
+                src.chunk_ids = ids
+                src.error = None
+                await db.commit()
+        except Exception as exc:  # per-URL failure isolation
+            async with async_session() as db:
+                src = (await db.execute(select(Source).where(Source.id == source_id))).scalar_one()
+                src.status = "failed"
+                src.chunk_count = 0
+                src.chunk_ids = []
+                src.error = str(exc)[:500]
+                await db.commit()
 
 
 def _lock_for(agent_id: int) -> asyncio.Lock:

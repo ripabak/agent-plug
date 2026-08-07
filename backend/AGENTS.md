@@ -102,6 +102,11 @@ ke `postgresql+psycopg://` — override via env jika perlu), `SECRET_KEY`, `CORS
   Every chunk carries `{url, title, source_id, agent_id}` metadata; `url` is
   `https://…`, `file://…`, or `text://…` — citations always resolve
   server-side, never from model-generated text.
+- **Indexing queue**: source indexing is bounded by `INDEX_CONCURRENCY`
+  (default 3) via a server-wide asyncio semaphore — sources wait in `pending`
+  (dashboard "Queued") until a slot frees up, so bulk adds finish slower but
+  never spike server/embedding load. The per-agent runner lock is unchanged:
+  one drain loop per agent, new sources added mid-run get picked up.
 - **Storage**: SEMUA akses file lewat `app.storage.storage` (singleton,
   `STORAGE_BACKEND=local|s3`) — jangan tulis langsung ke `UPLOAD_DIR` di
   router/pipeline. Key bersifat portable antar backend. Endpoint file:

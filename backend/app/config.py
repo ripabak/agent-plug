@@ -63,6 +63,11 @@ UPLOAD_DIR = os.path.join(_BACKEND_ROOT, os.getenv("UPLOAD_DIR", "uploads"))
 UPLOAD_MAX_FILES = int(os.getenv("UPLOAD_MAX_FILES", 5))
 UPLOAD_MAX_SIZE = int(os.getenv("UPLOAD_MAX_SIZE", 10 * 1024 * 1024))  # 10 MB per file
 
+# Max knowledge sources indexed CONCURRENTLY, server-wide. Sources beyond this
+# wait in the queue (status stays `pending` -> dashboard shows "Queued") — bulk
+# additions finish slower but never spike server/embedding load.
+INDEX_CONCURRENCY = int(os.getenv("INDEX_CONCURRENCY", 3))
+
 # --- Agent avatar (photo/logo upload) ---
 # Raw upload is validated on both FE and BE; the file is then compressed to
 # WebP (max AVATAR_MAX_DIM edge, AVATAR_QUALITY) with Pillow before storage.

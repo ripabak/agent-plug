@@ -62,7 +62,6 @@ onMounted(async () => {
       <RouterLink to="/dashboard" class="brand"
         ><span class="logo-mark"><PlugMark :size="17" /></span> Agent-Plug</RouterLink
       >
-      <RouterLink to="/dashboard" class="btn btn-ghost btn-sm">← All agents</RouterLink>
     </div>
 
     <div v-if="error" class="error-box">{{ error }}</div>

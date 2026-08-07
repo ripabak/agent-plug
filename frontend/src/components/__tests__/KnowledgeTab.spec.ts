@@ -12,7 +12,7 @@ vi.mock('@/api/client', () => ({
           token: string,
           agentId: number,
           data: { title?: string; content: string },
-        ) => Promise<Source>
+        ) => Promise<Source[]>
       >(),
     uploadSourceFiles:
       vi.fn<(token: string, agentId: number, files: File[]) => Promise<Source[]>>(),
@@ -40,6 +40,7 @@ const AGENT: Agent = {
   name: 'Bot',
   description: '',
   system_prompt: null,
+  persona_prompt: null,
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',
@@ -139,5 +140,75 @@ describe('KnowledgeTab sources list', () => {
     await flushPromises()
 
     expect(wrapper.find('.error-box').text()).toContain('boom')
+  })
+
+  it('adds uploaded PDFs to the list immediately (no manual refresh needed)', async () => {
+    const pdf = {
+      ...source({ kind: 'pdf', status: 'pending', url: 'file://1/abc.pdf' }),
+      id: 99,
+      file_name: 'manual.pdf',
+    }
+    vi.mocked(api.uploadSourceFiles).mockResolvedValue([pdf])
+    vi.mocked(api.listSources).mockResolvedValue([])
+    const { wrapper, store } = mountTab([])
+    await flushPromises()
+
+    await wrapper.findAll('button').find((b) => b.text().includes('PDF'))!.trigger('click')
+    const input = wrapper.find<HTMLInputElement>('input[type="file"]')
+    const file = new File(['x'], 'manual.pdf', { type: 'application/pdf' })
+    Object.defineProperty(input.element, 'files', { value: [file], configurable: true })
+    await input.trigger('change')
+    await flushPromises()
+
+    expect(api.uploadSourceFiles).toHaveBeenCalledWith('jwt', 1, [file])
+    expect(store.sources.some((s) => s.id === 99 && s.status === 'pending')).toBe(true)
+    expect(wrapper.text()).toContain('manual.pdf')
+  })
+
+  it('adds pasted text to the list immediately (no manual refresh needed)', async () => {
+    const text = {
+      ...source({ kind: 'text', status: 'pending', url: 'text://abc', title: 'FAQ' }),
+      id: 7,
+    }
+    vi.mocked(api.addTextSource).mockResolvedValue([text])
+    vi.mocked(api.listSources).mockResolvedValue([])
+    const { wrapper, store } = mountTab([])
+    await flushPromises()
+
+    await wrapper.findAll('button').find((b) => b.text().includes('Text'))!.trigger('click')
+    await wrapper.find('#text-title').setValue('FAQ')
+    await wrapper
+      .find('#text-content')
+      .setValue('This is a long enough piece of text to be indexed.')
+    await wrapper.findAll('button').find((b) => b.text().includes('Add text'))!.trigger('click')
+    await flushPromises()
+
+    expect(api.addTextSource).toHaveBeenCalledWith('jwt', 1, {
+      title: 'FAQ',
+      content: 'This is a long enough piece of text to be indexed.',
+    })
+    expect(store.sources.some((s) => s.id === 7 && s.status === 'pending')).toBe(true)
+    expect(wrapper.text()).toContain('FAQ')
+  })
+
+  it('marks sources as pending optimistically while re-indexing (keeps the poll alive)', async () => {
+    vi.mocked(api.listSources).mockResolvedValue([source({}), source({ id: 2, status: 'failed' })])
+    let resolveReindex!: (v: { scheduled: number }) => void
+    vi.mocked(api.reindexSources).mockReturnValue(new Promise((r) => (resolveReindex = r)))
+    const { wrapper, store } = mountTab([source({}), source({ id: 2, status: 'failed' })])
+    await flushPromises()
+
+    await wrapper.findAll('button').find((b) => b.text().includes('Re-index all'))!.trigger('click')
+    await flushPromises()
+
+    // While the re-index request is in flight the local statuses are queued, so
+    // the 3s poll keeps fetching real statuses without a manual refresh.
+    expect(api.reindexSources).toHaveBeenCalledWith('jwt', 1, false)
+    expect(store.sources.every((s) => s.status === 'pending')).toBe(true)
+
+    resolveReindex({ scheduled: 2 })
+    await flushPromises()
+    // the final reload fetches the post-reindex statuses
+    expect(api.listSources).toHaveBeenCalledTimes(2)
   })
 })

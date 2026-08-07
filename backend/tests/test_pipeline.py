@@ -87,6 +87,57 @@ async def test_index_source_failure_is_isolated(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_indexing_concurrency_is_bounded(monkeypatch):
+    """With INDEX_CONCURRENCY=2, at most 2 sources index at once; the rest queue."""
+    import threading
+    import time
+
+    from app.rag.pipeline import index_pending_sources
+
+    monkeypatch.setattr("app.rag.pipeline.INDEX_CONCURRENCY", 2)
+
+    mgr = RAGStoreManager(FakeEmbeddings())
+    async with async_session() as db:
+        user = User(email=f"pipe-{uuid.uuid4().hex}@example.com", display_name="Pipe", hashed_password="x")
+        db.add(user)
+        await db.flush()
+        agent = Agent(user_id=user.id, name="Pipeline Bot", public_token=f"tok_{uuid.uuid4().hex}")
+        db.add(agent)
+        await db.flush()
+        for i in range(4):
+            db.add(Source(agent_id=agent.id, url=f"https://example.com/{i}", status="pending"))
+        await db.commit()
+        agent_id = agent.id
+
+    # Track peak concurrent fetches (fetch_page runs in a thread via to_thread).
+    stats = {"active": 0, "max": 0}
+    guard = threading.Lock()
+
+    def slow_fetch(url, client=None):
+        with guard:
+            stats["active"] += 1
+            stats["max"] = max(stats["max"], stats["active"])
+        time.sleep(0.05)
+        with guard:
+            stats["active"] -= 1
+        return Page(url=url, title="T", text="queue content " * 20)
+
+    monkeypatch.setattr("app.rag.pipeline.fetch_page", slow_fetch)
+
+    processed = await index_pending_sources(agent_id, mgr)
+
+    assert processed == 4
+    assert stats["max"] == 2, "more than INDEX_CONCURRENCY sources ran at once"
+    async with async_session() as db:
+        statuses = (
+            (await db.execute(select(Source.status).where(Source.agent_id == agent_id)))
+            .scalars()
+            .all()
+        )
+    assert set(statuses) == {"ready"}
+
+
+@pytest.mark.asyncio
 async def test_rebuild_all(monkeypatch):
     mgr = RAGStoreManager(FakeEmbeddings())
     agent_id, source_id = await _seed_agent_and_source()

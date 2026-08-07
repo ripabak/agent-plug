@@ -56,6 +56,9 @@ class Agent(Base):
     name: Mapped[str] = mapped_column(String, nullable=False)
     description: Mapped[str] = mapped_column(Text, default="")
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Optional persona/tone prompt (dashboard "Agent personality" templates).
+    # ADDITIVE: appended on top of the default system prompt, never replaces it.
+    persona_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     welcome_message: Mapped[str] = mapped_column(String, default="Hi! How can I help you?")
     theme_color: Mapped[str] = mapped_column(String, default="#a9502a")
     avatar_emoji: Mapped[str] = mapped_column(String, default="🤖")

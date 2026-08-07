@@ -45,6 +45,7 @@ async def init_db() -> None:
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS avatar_path VARCHAR",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS avatar_kind VARCHAR NOT NULL DEFAULT 'photo'",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS chat_theme TEXT DEFAULT ''",
+            "ALTER TABLE agent ADD COLUMN IF NOT EXISTS persona_prompt TEXT",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_thinking BOOLEAN DEFAULT TRUE",
             "ALTER TABLE agent ADD COLUMN IF NOT EXISTS show_tools BOOLEAN DEFAULT TRUE",
         ):

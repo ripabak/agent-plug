@@ -19,6 +19,7 @@ export interface Agent {
   name: string
   description: string
   system_prompt: string | null
+  persona_prompt: string | null
   welcome_message: string
   theme_color: string
   avatar_emoji: string

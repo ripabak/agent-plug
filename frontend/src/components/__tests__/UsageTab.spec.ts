@@ -43,6 +43,7 @@ const AGENT: Agent = {
   name: 'Usage Bot',
   description: '',
   system_prompt: null,
+  persona_prompt: null,
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',

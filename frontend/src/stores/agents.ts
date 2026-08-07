@@ -58,8 +58,14 @@ export const useAgentsStore = defineStore('agents', () => {
 
   async function addSources(agentId: number, urls: string[]) {
     const created = await api.addSources(auth.token, agentId, urls)
-    sources.value = [...created, ...sources.value]
+    prependSources(created)
     return created
+  }
+
+  /** Prepend freshly created sources (URL/PDF/text) so they appear in the
+   *  list immediately while their indexing status is still pending. */
+  function prependSources(created: Source[]) {
+    sources.value = [...created, ...sources.value]
   }
 
   async function deleteSource(agentId: number, sourceId: number) {
@@ -85,6 +91,7 @@ export const useAgentsStore = defineStore('agents', () => {
     removeAvatar,
     fetchSources,
     addSources,
+    prependSources,
     deleteSource,
     reindex,
   }

@@ -25,6 +25,7 @@ vi.mock('@/api/client', () => ({
 import { api } from '@/api/client'
 import type { Agent } from '@/api/types'
 import ConfigureTab from '@/components/ConfigureTab.vue'
+import { PERSONA_TEMPLATES } from '@/utils/personaTemplates'
 import { useAgentsStore } from '@/stores/agents'
 import { useAuthStore } from '@/stores/auth'
 
@@ -34,6 +35,7 @@ const AGENT: Agent = {
   name: 'Bot',
   description: '',
   system_prompt: null,
+  persona_prompt: null,
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',
@@ -53,6 +55,13 @@ function mountTab(current: Agent) {
   const store = useAgentsStore()
   store.current = { ...current }
   return { wrapper: mount(ConfigureTab), store }
+}
+
+/** The "Save changes" button (the first generic `.btn` is the upload-photo one). */
+function saveButton(wrapper: ReturnType<typeof mount>) {
+  const btn = wrapper.findAll('button').find((b) => b.text().includes('Save changes'))
+  if (!btn) throw new Error('Save changes button not found')
+  return btn
 }
 
 describe('ConfigureTab avatar photo/emoji exclusivity', () => {
@@ -139,5 +148,63 @@ describe('ConfigureTab avatar photo/emoji exclusivity', () => {
       wrapper.findAll('.avatar-option').every((o) => o.attributes('disabled') === undefined),
     ).toBe(true)
     vi.restoreAllMocks()
+  })
+})
+
+describe('ConfigureTab agent personality (persona)', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.clearAllMocks()
+  })
+
+  it('renders every persona template chip', () => {
+    const { wrapper } = mountTab(AGENT)
+    const chips = wrapper.findAll('.persona-template')
+    expect(chips.length).toBe(PERSONA_TEMPLATES.length)
+    expect(wrapper.find('#c-persona').exists()).toBe(true)
+  })
+
+  it('selecting a template fills the textarea and highlights the chip', async () => {
+    const { wrapper } = mountTab(AGENT)
+    const t = PERSONA_TEMPLATES[0]!
+    await wrapper.findAll('.persona-template')[0]!.trigger('click')
+    const ta = wrapper.find('#c-persona').element as HTMLTextAreaElement
+    expect(ta.value).toBe(t.prompt)
+    expect(wrapper.findAll('.persona-template')[0]!.classes()).toContain('active')
+  })
+
+  it('editing the textarea by hand clears the active chip', async () => {
+    const { wrapper } = mountTab(AGENT)
+    await wrapper.findAll('.persona-template')[0]!.trigger('click')
+    const ta = wrapper.find('#c-persona')
+    await ta.setValue('my custom persona')
+    expect(wrapper.findAll('.persona-template').every((c) => !c.classes().includes('active'))).toBe(
+      true,
+    )
+  })
+
+  it('saves an empty persona as null', async () => {
+    const { wrapper } = mountTab(AGENT)
+    vi.mocked(api.updateAgent).mockResolvedValue({ ...AGENT, persona_prompt: null })
+    await saveButton(wrapper).trigger('click')
+    await flushPromises()
+    expect(vi.mocked(api.updateAgent).mock.calls[0]![2].persona_prompt).toBeNull()
+  })
+
+  it('saves the selected template prompt as the persona', async () => {
+    const { wrapper } = mountTab(AGENT)
+    const t = PERSONA_TEMPLATES[2]!
+    vi.mocked(api.updateAgent).mockResolvedValue({ ...AGENT, persona_prompt: t.prompt })
+    await wrapper.findAll('.persona-template')[2]!.trigger('click')
+    await saveButton(wrapper).trigger('click')
+    await flushPromises()
+    expect(vi.mocked(api.updateAgent).mock.calls[0]![2].persona_prompt).toBe(t.prompt)
+  })
+
+  it('restores a saved template persona as the active chip', () => {
+    const t = PERSONA_TEMPLATES[1]!
+    const { wrapper } = mountTab({ ...AGENT, persona_prompt: t.prompt })
+    expect(wrapper.findAll('.persona-template')[1]!.classes()).toContain('active')
+    expect((wrapper.find('#c-persona').element as HTMLTextAreaElement).value).toBe(t.prompt)
   })
 })

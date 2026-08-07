@@ -67,6 +67,9 @@ services:
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-qwen/qwen3.7-flash}
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-perplexity/pplx-embed-v1-0.6b}
+      # Max sources indexed concurrently (server-wide); the rest queue with
+      # status "Queued" in the dashboard.
+      INDEX_CONCURRENCY: ${INDEX_CONCURRENCY:-3}
       # Storage for uploaded PDFs/avatars: local (volume `uploads`) atau S3
       # EKSTERNAL (isi S3_ENDPOINT_URL dkk di .env — SeaweedFS/MinIO/AWS S3).
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}

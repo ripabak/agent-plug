@@ -25,6 +25,7 @@ const AGENT: Agent = {
   name: 'Bot',
   description: '',
   system_prompt: null,
+  persona_prompt: null,
   welcome_message: 'hi',
   theme_color: '#4f46e5',
   avatar_emoji: '🤖',

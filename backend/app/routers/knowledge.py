@@ -1,7 +1,7 @@
 """Knowledge base routes: add/list/get-file/delete/reindex URL sources and PDF uploads."""
 import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,6 +31,7 @@ async def _get_owned_agent(db: AsyncSession, agent_id: int, user: User) -> Agent
 async def add_sources(
     agent_id: int,
     data: SourceCreate,
+    background_tasks: BackgroundTasks,
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -59,8 +60,10 @@ async def add_sources(
         await db.commit()
         for s in created:
             await db.refresh(s)
-        # Fire-and-forget indexing; frontend polls status.
-        await index_pending_sources(agent_id)
+        # Fire-and-forget indexing: the response returns immediately (sources
+        # queue up, bounded by INDEX_CONCURRENCY) and the dashboard polls
+        # status. Sources added mid-run are drained by the same runner.
+        background_tasks.add_task(index_pending_sources, agent_id)
 
     return [SourceResponse.model_validate(s) for s in created]
 
@@ -69,6 +72,7 @@ async def add_sources(
 async def upload_source_files(
     agent_id: int,
     files: list[UploadFile] = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -116,7 +120,8 @@ async def upload_source_files(
     await db.commit()
     for s in created:
         await db.refresh(s)
-    await index_pending_sources(agent_id)
+    # Same fire-and-forget pattern: files are stored inline, indexing queues up.
+    background_tasks.add_task(index_pending_sources, agent_id)
 
     return [SourceResponse.model_validate(s) for s in created]
 
@@ -125,6 +130,7 @@ async def upload_source_files(
 async def add_text_source(
     agent_id: int,
     data: TextSourceCreate,
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -150,7 +156,7 @@ async def add_text_source(
     await db.commit()
     await db.refresh(source)
 
-    await index_pending_sources(agent_id)
+    background_tasks.add_task(index_pending_sources, agent_id)
     return [SourceResponse.model_validate(source)]
 
 

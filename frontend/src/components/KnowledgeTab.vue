@@ -93,6 +93,7 @@ async function uploadFiles(files: FileList | File[]) {
   notice.value = ''
   try {
     const created = await api.uploadSourceFiles(auth.token, agentId.value, list)
+    agentsStore.prependSources(created)
     notice.value = `Uploaded ${created.length} PDF(s) — indexing started.`
     if (fileInput.value) fileInput.value.value = ''
   } catch (err) {
@@ -114,7 +115,12 @@ function onDrop(e: DragEvent) {
 
 async function removeSource(sourceId: number) {
   if (!confirm('Remove this source from the knowledge base?')) return
-  await agentsStore.deleteSource(agentId.value, sourceId)
+  error.value = ''
+  try {
+    await agentsStore.deleteSource(agentId.value, sourceId)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Failed to remove source'
+  }
 }
 
 /** Open an uploaded PDF in a new tab (fetched with the auth header as a blob). */
@@ -135,8 +141,21 @@ async function openPdf(s: Source) {
 }
 
 async function reindex(onlyFailed = false) {
+  error.value = ''
+  // Optimistically mark the affected sources as pending ("Queued") before the
+  // request goes out: hasRunning is derived from this local list, so this keeps
+  // the 3s status poll running and the list reflects the job immediately — no
+  // manual Refresh needed while the backend re-indexes.
+  for (const s of agentsStore.sources) {
+    if (!onlyFailed || s.status === 'failed') s.status = 'pending'
+  }
   notice.value = 'Re-indexing… statuses update automatically.'
-  await agentsStore.reindex(agentId.value, onlyFailed)
+  try {
+    await agentsStore.reindex(agentId.value, onlyFailed)
+  } catch (err) {
+    error.value = err instanceof Error ? err.message : 'Re-index failed'
+  }
+  await load() // backend re-index runs inline — fetch the final statuses
 }
 
 onMounted(() => {
@@ -167,10 +186,11 @@ async function addText() {
   error.value = ''
   notice.value = ''
   try {
-    await api.addTextSource(auth.token, agentId.value, {
+    const created = await api.addTextSource(auth.token, agentId.value, {
       title: textTitle.value.trim() || 'Pasted text',
       content,
     })
+    agentsStore.prependSources(created)
     textContent.value = ''
     textTitle.value = ''
     notice.value = 'Text added — indexing started.'

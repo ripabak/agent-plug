@@ -49,6 +49,7 @@ async def create_agent(data: AgentCreate, user: User = Depends(get_current_user)
         name=data.name,
         description=data.description,
         system_prompt=data.system_prompt,
+        persona_prompt=data.persona_prompt,
         welcome_message=data.welcome_message,
         theme_color=data.theme_color,
         avatar_emoji=data.avatar_emoji,
