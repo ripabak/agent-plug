@@ -105,13 +105,13 @@ async def upload_avatar(
 ):
     """Upload/replace the agent's avatar (validated + compressed).
 
-    `kind` controls how the widget renders it: `photo` (uploaded logo — floats
-    with no background color) or `template` (animated GIF/emoji — drawn on the
-    header-colored circle). The raw upload is limited to AVATAR_MAX_SIZE and
-    to GIF/JPEG/PNG/WebP; the image is resized to at most AVATAR_MAX_DIM and
-    re-encoded as WebP with Pillow. A fixed key (avatars/{agent_id}.webp)
-    keeps the avatar URL stable across replacements (the ?v= version busts
-    the browser cache).
+    `kind` marks the upload as `photo` (user file) or `template` (bundled GIF
+    template); the widget renders every avatar on the header-colored button /
+    header circle, so transparent PNGs and GIFs follow the theme color. The
+    raw upload is limited to AVATAR_MAX_SIZE and to GIF/JPEG/PNG/WebP; the
+    image is resized to at most AVATAR_MAX_DIM and re-encoded as WebP with
+    Pillow. A fixed key (avatars/{agent_id}.webp) keeps the avatar URL stable
+    across replacements (the ?v= version busts the browser cache).
     """
     if kind not in ("photo", "template"):
         raise HTTPException(

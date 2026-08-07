@@ -580,17 +580,15 @@
   // Avatar element: photo/template (img) when uploaded, otherwise the emoji
   // fallback. The 30x30 size comes from the CSS class only — setting
   // width/height inline would blow the img up to the header width.
-  //   - kind 'template' (animated GIF/emoji): keeps the circle background
-  //     (translucent white on the header), like the emoji avatar.
-  //   - kind 'photo' (uploaded logo): transparent, so PNG transparency
-  //     floats without a color behind it.
+  // Every avatar (uploaded photo or GIF template) keeps the circle background
+  // (translucent white on the header), so transparent PNGs/GIFs sit on the
+  // header-colored header exactly like the emoji avatar.
   function avatarEl() {
     if (config.avatar_url) {
       var img = el('img', { class: uid + '-avatar', alt: '', 'aria-hidden': 'true' });
       img.src = config.avatar_url;
       img.style.objectFit = 'contain';
       img.style.borderRadius = '50%';
-      if (config.avatar_kind === 'photo') img.style.background = 'transparent';
       return img;
     }
     return el('div', { class: uid + '-avatar', text: config.avatar_emoji || '🤖' });
@@ -637,10 +635,11 @@
     if (btn) return btn;
     btn = el('button', { class: uid + '-launcher', id: uid + '-launcher', 'aria-label': 'Open chat' });
     if (config.avatar_url) {
-      // 'template' keeps the class background (header color circle) so the
-      // animated emoji sits on a colored button like the emoji avatar;
-      // 'photo' clears it first so transparent logos float.
-      if (config.avatar_kind === 'photo') btn.style.background = 'transparent';
+      // The button keeps the header-color background from the CSS class and
+      // draws the avatar on top, so transparent PNGs/GIFs follow the header
+      // color (like the emoji avatar) instead of floating colorless — this
+      // also means live theme changes (setTheme) reach the button, since no
+      // inline background overrides the stylesheet.
       btn.style.backgroundImage = "url('" + config.avatar_url + "')";
       btn.style.backgroundSize = 'contain';
       btn.style.backgroundPosition = 'center';

@@ -7,8 +7,9 @@ returns a compressed WebP payload ready for the storage backend.
 - PNG / JPG / WebP stills are downscaled and re-encoded as WebP (alpha kept).
 - Animated GIFs are converted to ANIMATED WebP (same frame timing), so the
   avatar keeps moving on the button.
-- Transparency is preserved (RGBA) — the frontend renders the photo without
-  a background color, so transparent PNGs/GIFs float on the page.
+- Transparency is preserved (RGBA) — the widget draws the avatar on the
+  header-colored button/circle, so transparent PNGs/GIFs follow the theme
+  color.
 """
 import io
 

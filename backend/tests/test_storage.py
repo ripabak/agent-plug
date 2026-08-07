@@ -71,7 +71,7 @@ async def test_local_storage_rejects_traversal(tmp_path):
 @pytest.mark.asyncio
 async def test_s3_storage_roundtrip():
     client = FakeS3Client()
-    s = S3Storage("http://seaweedfs:8333", "k", "s", "bucket", client=client)
+    s = S3Storage("https://s3.example.com", "k", "s", "bucket", client=client)
 
     await s.put("doc/1.pdf", b"pdf-bytes", content_type="application/pdf")
     assert client.created_buckets == {"bucket"}  # lazy bucket creation

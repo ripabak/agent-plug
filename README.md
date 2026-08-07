@@ -65,7 +65,7 @@ frontend/
   public/demo.html         # widget demo page
   package.json             # bun deps + scripts (dev/build/test/lint)
 docs/                      # planning docs
-docker-compose.yml         # db + backend + seaweedfs + frontend
+docker-compose.yml         # db + backend + frontend (S3 eksternal opsional)
 .env.example               # all env vars (backend / docker / frontend)
 ```
 

@@ -5,10 +5,12 @@
 # Services:
 #   db       PostgreSQL 17 (data persisted in the `pgdata` volume)
 #   backend  FastAPI app (uvicorn on :8000) — API + widget.js
-#   seaweedfs  self-hosted S3-compatible object storage (SeaweedFS) — optional,
-#            dipakai saat STORAGE_BACKEND=s3 untuk menyimpan PDF yang di-upload
 #   frontend the built Vue dashboard served by `vite preview` (bun) on :5173,
 #            calling the backend directly at http://localhost:8000 (CORS)
+#
+# Uploaded PDFs/avatars disimpan ke S3 EKSTERNAL saat STORAGE_BACKEND=s3
+# (isi S3_ENDPOINT_URL / S3_ACCESS_KEY / S3_SECRET_KEY / S3_BUCKET di .env) —
+# tidak ada object storage yang di-host di compose ini.
 #
 # Semua konfigurasi backend (termasuk OPENROUTER_API_KEY) didefinisikan di
 # bawah ini dan diisi lewat file `.env` di root repo (copy dari .env.example) —
@@ -63,42 +65,22 @@ services:
       OPENROUTER_MODEL: ${OPENROUTER_MODEL:-qwen/qwen3.7-flash}
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       OPENROUTER_EMBEDDING_MODEL: ${OPENROUTER_EMBEDDING_MODEL:-perplexity/pplx-embed-v1-0.6b}
-      # Storage for uploaded PDFs: local (volume `uploads`) atau s3 (SeaweedFS
-      # service di bawah). Set STORAGE_BACKEND=s3 untuk memakai SeaweedFS.
+      # Storage for uploaded PDFs/avatars: local (volume `uploads`) atau S3
+      # EKSTERNAL (isi S3_ENDPOINT_URL dkk di .env — SeaweedFS/MinIO/AWS S3).
       STORAGE_BACKEND: ${STORAGE_BACKEND:-local}
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-http://seaweedfs:8333}
-      # SeaweedFS tanpa config menerima kredensial apa pun (anonymous) —
-      # value di bawah hanya placeholder agar boto3 bisa sign request.
-      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-seaweed}
-      S3_SECRET_KEY: ${S3_SECRET_KEY:-seaweed}
+      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL:-}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
       S3_BUCKET: ${S3_BUCKET:-agent-plug}
       S3_PREFIX: ${S3_PREFIX:-}
     depends_on:
       db:
-        condition: service_healthy
-      seaweedfs:
         condition: service_healthy
     volumes:
       # Uploaded PDFs persist across container restarts (STORAGE_BACKEND=local).
       - uploads:/app/uploads
     ports:
       - "8000:8000"
-
-  seaweedfs:
-    image: chrislusf/seaweedfs:latest
-    restart: unless-stopped
-    # Master + volume + S3 gateway (port 8333) dalam satu proses; data di /data.
-    command: "server -dir=/data -s3"
-    volumes:
-      - seaweedfs_data:/data
-    ports:
-      # S3 API — akses opsional dari host untuk debugging (s3cmd, rclone, dll).
-      - "127.0.0.1:8333:8333"
-    healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:9333/cluster/status"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   frontend:
     build:
@@ -115,4 +97,3 @@ services:
 volumes:
   pgdata:
   uploads:
-  seaweedfs_data:

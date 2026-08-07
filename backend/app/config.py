@@ -70,10 +70,10 @@ AVATAR_QUALITY = int(os.getenv("AVATAR_QUALITY", 82))  # WebP quality
 AVATAR_CONTENT_TYPES = ("image/gif", "image/jpeg", "image/png", "image/webp")
 
 # --- Storage (where uploaded PDFs live) ---
-# local = filesystem under UPLOAD_DIR (default); s3 = S3-compatible object
-# storage such as SeaweedFS or MinIO (see docker-compose.yml `seaweedfs`).
+# local = filesystem under UPLOAD_DIR (default); s3 = EXTERNAL S3-compatible
+# object storage (SeaweedFS / MinIO / AWS S3) via S3_ENDPOINT_URL.
 STORAGE_BACKEND = os.getenv("STORAGE_BACKEND", "local").strip().lower()
-S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")  # e.g. http://seaweedfs:8333
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")  # e.g. https://s3.example.com
 S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "")
 S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "")
 S3_BUCKET = os.getenv("S3_BUCKET", "agent-plug")
